@@ -1,0 +1,4 @@
+ALTER TABLE "User"
+ADD COLUMN "themeBackground" TEXT NOT NULL DEFAULT '#f7f4ef',
+ADD COLUMN "themeAccent" TEXT NOT NULL DEFAULT '#8d718f',
+ADD COLUMN "themeSidebar" TEXT NOT NULL DEFAULT '#0f1d36';

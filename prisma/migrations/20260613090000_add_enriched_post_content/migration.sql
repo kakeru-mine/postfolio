@@ -1,0 +1,7 @@
+ALTER TABLE "SavedItem"
+ADD COLUMN "postText" TEXT,
+ADD COLUMN "mediaUrls" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN "quotedPostText" TEXT,
+ADD COLUMN "quotedPostAuthor" TEXT,
+ADD COLUMN "threadTexts" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN "contentFetchedAt" TIMESTAMP(3);

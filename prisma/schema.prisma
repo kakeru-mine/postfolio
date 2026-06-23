@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SourcePlatform {
+  X
+  NOTE
+  YOUTUBE
+  SUBSTACK
+  TIKTOK
+  INSTAGRAM
+  THREADS
+  FACEBOOK
+  LINKEDIN
+  REDDIT
+  OTHER
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  CREATOR
+}
+
+model User {
+  id                      String             @id @default(cuid())
+  email                   String             @unique
+  name                    String?
+  avatarUrl               String?
+  passwordHash            String?
+  plan                    SubscriptionPlan   @default(FREE)
+  stripeCustomerId        String?            @unique
+  stripeSubscriptionId    String?            @unique
+  stripePriceId           String?
+  subscriptionStatus      String?
+  subscriptionPeriodEnd   DateTime?
+  subscriptionCancelAtPeriodEnd Boolean            @default(false)
+  themeBackground         String             @default("#ffffff")
+  themeMain               String             @default("#2563eb")
+  themeAccent             String             @default("#ff6b6b")
+  themeSidebar            String             @default("#172554")
+  savedItems              SavedItem[]
+  collections             Collection[]
+  aiUsageMonths           AiUsageMonth[]
+  sessions                Session[]
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model SavedItem {
+  id              String         @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url             String
+  normalizedUrl   String
+  sourcePlatform  SourcePlatform @default(OTHER)
+  title           String?
+  description     String?
+  thumbnailUrl    String?
+  domain          String?
+  authorName      String?
+  postText        String?
+  mediaUrls       String[]       @default([])
+  quotedPostText  String?
+  quotedPostAuthor String?
+  threadTexts     String[]       @default([])
+  contentFetchedAt DateTime?
+  publishedAt     DateTime?
+  userMemo        String?
+  purpose         String?
+  userTags        String[]       @default([])
+  aiSummary       String?
+  aiTags          String[]       @default([])
+  aiUseCases      String[]       @default([])
+  aiGrowthReason  String?
+  aiRating        String?
+  aiContentAngles String[]       @default([])
+  reuseScore      Int?
+  referencePoints String[]       @default([])
+  usefulFor       String[]       @default([])
+  reuseStatus     String         @default("idea")
+  evaluationNote  String?
+  collectionId    String?
+  collection      Collection?    @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  sortOrder       Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([userId, normalizedUrl])
+  @@index([userId, sortOrder])
+  @@index([userId, createdAt])
+  @@index([userId, sourcePlatform])
+  @@index([userId, reuseScore])
+  @@index([userId, reuseStatus])
+  @@index([collectionId])
+}
+
+model Collection {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  color       String      @default("#6C63FF")
+  items       SavedItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId, updatedAt])
+}
+
+model AiUsageMonth {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  periodKey String
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, periodKey])
+  @@index([periodKey])
+}
