@@ -291,15 +291,38 @@ function extractYouTubePublishedAt(html: string) {
   for (const pattern of [
     /"publishDate"\s*:\s*"([^"]+)"/,
     /"uploadDate"\s*:\s*"([^"]+)"/,
+    /"dateText"\s*:\s*{[\s\S]{0,600}?"simpleText"\s*:\s*"([^"]+)"/,
     /itemprop="datePublished"\s+content="([^"]+)"/,
     /itemprop="uploadDate"\s+content="([^"]+)"/,
   ]) {
     const value = html.match(pattern)?.[1];
     if (!value) continue;
-    const date = new Date(value);
-    if (!Number.isNaN(date.getTime())) return date;
+    const date = parseYouTubePublishedDate(value);
+    if (date) return date;
   }
   return undefined;
+}
+
+function parseYouTubePublishedDate(value: string) {
+  const cleaned = decodeJsonString(value)
+    ?.replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return undefined;
+
+  const date = new Date(cleaned);
+  if (!Number.isNaN(date.getTime())) return date;
+
+  const numericDate =
+    cleaned.match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/) ||
+    cleaned.match(/(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/);
+  if (!numericDate) return undefined;
+
+  const year = Number(numericDate[1]);
+  const month = Number(numericDate[2]);
+  const day = Number(numericDate[3]);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (Number.isNaN(parsed.getTime())) return undefined;
+  return parsed;
 }
 
 async function fetchTikTokMetadata(
@@ -448,6 +471,7 @@ function extractInstagramMetadata(
 
 function extractThreadsMetadata(
   $: cheerio.CheerioAPI,
+  html = "",
 ): PlatformMetadata {
   const title = cleanMetadataValue(
     content($, ['meta[property="og:title"]', 'meta[name="twitter:title"]']),
@@ -470,14 +494,7 @@ function extractThreadsMetadata(
       ? `${authorMatch[1].trim()} (@${authorMatch[2].trim()})`
       : authorMatch[1].trim()
     : twitterCreator;
-  const candidateThumbnailUrl = content($, [
-    'meta[property="og:image"]',
-    'meta[name="twitter:image"]',
-  ]);
-  const thumbnailUrl =
-    candidateThumbnailUrl && !isThreadsProfileImage(candidateThumbnailUrl)
-      ? candidateThumbnailUrl
-      : undefined;
+  const thumbnailUrl = findThreadsThumbnailUrl($, html);
 
   return {
     title,
@@ -637,7 +654,11 @@ function decodeJsonString(value: string | undefined) {
 }
 
 function normalizeMetadataUrl(value: string | undefined) {
-  const cleaned = value?.replace(/\\u0026/g, "&").trim();
+  const cleaned = value
+    ?.replace(/\\u0026/g, "&")
+    .replace(/\\\//g, "/")
+    .replace(/&amp;/g, "&")
+    .trim();
   if (!cleaned || !/^https?:\/\//i.test(cleaned)) return undefined;
   return cleaned;
 }
@@ -682,8 +703,9 @@ async function fetchThreadsPreviewMetadata(
       const type = response.headers.get("content-type") ?? "";
       if (!type.includes("text/html")) continue;
 
-      const $ = cheerio.load((await response.text()).slice(0, 2_000_000));
-      const metadata = extractThreadsMetadata($);
+      const html = (await response.text()).slice(0, 2_000_000);
+      const $ = cheerio.load(html);
+      const metadata = extractThreadsMetadata($, html);
       if (hasMetadata(metadata)) return metadata;
     } catch {
       // Try the next preview user agent.
@@ -698,6 +720,34 @@ function isThreadsProfileImage(url: string) {
     /\/t51\.82787-19\//i.test(url) ||
     /\/t51\.2885-19\//i.test(url)
   );
+}
+
+function findThreadsThumbnailUrl($: cheerio.CheerioAPI, html: string) {
+  const candidates = [
+    content($, [
+      'meta[property="og:image"]',
+      'meta[name="twitter:image"]',
+      'meta[property="og:image:secure_url"]',
+    ]),
+    ...Array.from(
+      html.matchAll(
+        /https?:\\?\/\\?\/[^"'<>\\\s]+(?:fbcdn|cdninstagram)[^"'<>\\\s]+/gi,
+      ),
+      (match) => match[0],
+    ),
+  ]
+    .map((candidate) => normalizeMetadataUrl(candidate))
+    .filter((candidate): candidate is string => Boolean(candidate));
+
+  const postImage = candidates.find(
+    (candidate) =>
+      !isThreadsProfileImage(candidate) && !isThreadsStaticAsset(candidate),
+  );
+  return postImage || undefined;
+}
+
+function isThreadsStaticAsset(url: string) {
+  return /static\.cdninstagram\.com|rsrc\.php|\.svg(?:\?|$)/i.test(url);
 }
 
 async function fetchPlatformFallbackMetadata(
@@ -785,7 +835,7 @@ export async function fetchUrlMetadata(rawUrl: string) {
             }
         : sourcePlatform === "THREADS"
           ? {
-              ...extractThreadsMetadata($),
+              ...extractThreadsMetadata($, html),
               ...(await fetchThreadsPreviewMetadata(finalUrl)),
             }
         : sourcePlatform === "SUBSTACK"
