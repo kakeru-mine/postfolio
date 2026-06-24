@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { ArrowUpRight, Folder } from "lucide-react";
 import Link from "next/link";
+import { ThumbnailImage } from "@/components/thumbnail-image";
 import { platformLabel } from "@/lib/platform";
 
 export type ItemCardItem = Pick<
@@ -37,11 +38,14 @@ export function ItemCard({
       >
         <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-slate-50 via-[#f8f7fb] to-[#eef3ff] sm:aspect-[16/10]">
           {item.thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <ThumbnailImage
               src={item.thumbnailUrl}
-              alt=""
               className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]"
+              fallback={
+                <div className="grid h-full place-items-center text-4xl font-black text-[var(--primary)] opacity-20">
+                  {platformLabel(item.sourcePlatform)}
+                </div>
+              }
             />
           ) : (
             <div className="grid h-full place-items-center text-4xl font-black text-[var(--primary)] opacity-20">
@@ -93,11 +97,14 @@ export function ItemCard({
     >
       <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#f4f0ea] to-[#e8dde9] sm:aspect-[16/8]">
         {item.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <ThumbnailImage
             src={item.thumbnailUrl}
-            alt=""
             className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+            fallback={
+              <div className="grid h-full place-items-center text-4xl font-bold text-[var(--primary)] opacity-30">
+                {platformLabel(item.sourcePlatform)}
+              </div>
+            }
           />
         ) : (
           <div className="grid h-full place-items-center text-4xl font-bold text-[var(--primary)] opacity-30">

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { AiAnalysisPanel } from "@/components/ai-analysis-panel";
 import { ItemEditor } from "@/components/item-editor";
 import { MetadataRefreshButton } from "@/components/metadata-refresh-button";
+import { ThumbnailImage } from "@/components/thumbnail-image";
 import { platformLabel } from "@/lib/platform";
 import { prisma } from "@/lib/prisma";
 import { getSavedItemAiRating } from "@/lib/saved-item-ai-rating";
@@ -50,11 +51,14 @@ export default async function ItemDetail({
           <div className="card overflow-hidden">
             <div className="aspect-[16/7] bg-gradient-to-br from-[#f4f0ea] to-[#e8dde9]">
               {item.thumbnailUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <ThumbnailImage
                   src={item.thumbnailUrl}
-                  alt=""
                   className="h-full w-full object-cover"
+                  fallback={
+                    <div className="grid h-full place-items-center text-5xl font-bold text-[var(--primary)] opacity-25">
+                      {platformLabel(item.sourcePlatform)}
+                    </div>
+                  }
                 />
               ) : (
                 <div className="grid h-full place-items-center text-5xl font-bold text-[var(--primary)] opacity-25">
