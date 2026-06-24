@@ -1,18 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Collection, SavedItem } from "@prisma/client";
 import { Check } from "lucide-react";
 import { BulkItemActions } from "@/components/bulk-item-actions";
-import { ItemCard } from "@/components/item-card";
-
-type ItemWithCollection = SavedItem & { collection: Collection | null };
+import { ItemCard, type ItemCardItem } from "@/components/item-card";
 
 export function SortableItemGrid({
   items: initialItems,
   collections,
 }: {
-  items: ItemWithCollection[];
+  items: ItemCardItem[];
   collections: { id: string; name: string }[];
 }) {
   const [items, setItems] = useState(initialItems);

@@ -1,17 +1,32 @@
-import { SavedItem, Collection } from "@prisma/client";
+import { Collection, SavedItem } from "@prisma/client";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { ArrowUpRight, Folder } from "lucide-react";
 import Link from "next/link";
 import { platformLabel } from "@/lib/platform";
 
-type ItemWithCollection = SavedItem & { collection: Collection | null };
+export type ItemCardItem = Pick<
+  SavedItem,
+  | "id"
+  | "url"
+  | "sourcePlatform"
+  | "title"
+  | "description"
+  | "thumbnailUrl"
+  | "domain"
+  | "userMemo"
+  | "purpose"
+  | "userTags"
+  | "createdAt"
+> & {
+  collection: Pick<Collection, "id" | "name"> | null;
+};
 
 export function ItemCard({
   item,
   variant = "default",
 }: {
-  item: ItemWithCollection;
+  item: ItemCardItem;
   variant?: "default" | "dewey";
 }) {
   if (variant === "dewey") {

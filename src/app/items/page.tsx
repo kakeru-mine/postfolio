@@ -55,7 +55,25 @@ export default async function Home({
             }
           : {}),
       },
-      include: { collection: true },
+      select: {
+        id: true,
+        url: true,
+        sourcePlatform: true,
+        title: true,
+        description: true,
+        thumbnailUrl: true,
+        domain: true,
+        userMemo: true,
+        purpose: true,
+        userTags: true,
+        createdAt: true,
+        collection: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     }),
   ]);
