@@ -16,8 +16,8 @@ export function getStripe() {
 
 export function appUrl(requestOrigin?: string) {
   return (
+    requestOrigin?.replace(/\/+$/, "") ||
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ||
-    requestOrigin ||
     "http://localhost:3000"
   );
 }

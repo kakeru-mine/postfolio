@@ -6,6 +6,8 @@ import { getOptionalCurrentUser } from "@/lib/user";
 import { getUserTheme } from "@/lib/user-theme";
 import "./globals.css";
 
+export const preferredRegion = "hnd1";
+
 export const metadata: Metadata = {
   title: "Postfolio | SNSリサーチボックス",
   description: "SNSで見つけた良い投稿を、次の企画につなげるリサーチ資産へ。",
