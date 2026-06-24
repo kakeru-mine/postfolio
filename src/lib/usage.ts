@@ -3,24 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { getPlanDefinition, type PlanDefinition } from "@/lib/plans";
 
 export function dailyPeriodKey(date = new Date()) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  })
-    .format(date)
-    .replaceAll("-", "");
+  const { year, month, day } = tokyoDateParts(date);
+  return `${year}${month}${day}`;
 }
 
 export function monthlyPeriodKey(date = new Date()) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "2-digit",
-  })
-    .format(date)
-    .replace("-", "");
+  const { year, month } = tokyoDateParts(date);
+  return `${year}${month}`;
 }
 
 export function currentPeriodKey(date = new Date()) {
@@ -31,6 +20,23 @@ function aiUsagePeriodKey(plan: PlanDefinition, date = new Date()) {
   return plan.aiLimitPeriod === "day"
     ? dailyPeriodKey(date)
     : monthlyPeriodKey(date);
+}
+
+function tokyoDateParts(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const value = (type: "year" | "month" | "day") =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return {
+    year: value("year"),
+    month: value("month"),
+    day: value("day"),
+  };
 }
 
 export async function getUsageSummary(user: {
