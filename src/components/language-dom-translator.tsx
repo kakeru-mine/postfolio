@@ -270,8 +270,19 @@ const textAttributes = ["placeholder", "aria-label", "title"] as const;
 
 export function LanguageDomTranslator({ language }: { language: AppLanguage }) {
   useEffect(() => {
-    const applyTranslations = () => translateDocument(language);
+    const appliedLanguage = document.documentElement.dataset.postfolioLanguage;
+    if (language === "ja" && appliedLanguage !== "en") {
+      document.documentElement.dataset.postfolioLanguage = "ja";
+      return;
+    }
+
+    const applyTranslations = () => {
+      translateDocument(language);
+      document.documentElement.dataset.postfolioLanguage = language;
+    };
     applyTranslations();
+
+    if (language === "ja") return;
 
     const observer = new MutationObserver(() => {
       window.requestAnimationFrame(applyTranslations);
