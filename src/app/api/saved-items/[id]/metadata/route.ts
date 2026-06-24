@@ -27,9 +27,15 @@ export async function PATCH(_: NextRequest, context: Context) {
 
     const metadata = await fetchUrlMetadata(item.normalizedUrl);
     const { publishedAt, ...storedMetadata } = metadata;
+    // Avoid overwriting existing values with empty/undefined results from a failed fetch
+    const dataToUpdate = Object.fromEntries(
+      Object.entries(storedMetadata).filter(([, v]) =>
+        Array.isArray(v) ? v.length > 0 : v !== undefined && v !== null,
+      ),
+    );
     const updatedItem = await prisma.savedItem.update({
       where: { id: item.id },
-      data: storedMetadata,
+      data: dataToUpdate,
     });
     await updateSavedItemPublishedAt(item.id, publishedAt);
 
