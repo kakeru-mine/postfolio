@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { AppShell } from "@/components/app-shell";
-import { DEFAULT_THEME, getThemeCssVariables } from "@/lib/theme";
+import { DEFAULT_THEME, getThemeCssVariables, normalizeTheme } from "@/lib/theme";
 import { getOptionalCurrentUser } from "@/lib/user";
-import { getUserTheme } from "@/lib/user-theme";
 import "./globals.css";
 
 export const preferredRegion = "hnd1";
@@ -21,7 +20,14 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const user = await getOptionalCurrentUser();
-  const theme = user ? await getUserTheme(user.id) : DEFAULT_THEME;
+  const theme = user
+    ? normalizeTheme({
+        background: user.themeBackground,
+        main: user.themeMain,
+        accent: user.themeAccent,
+        sidebar: user.themeSidebar,
+      })
+    : DEFAULT_THEME;
   const themeVariables = getThemeCssVariables(theme) as CSSProperties;
 
   return (

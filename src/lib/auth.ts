@@ -8,6 +8,7 @@ import {
 import type { User } from "@prisma/client";
 import { promisify } from "util";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
 const scrypt = promisify(scryptCallback);
@@ -71,7 +72,7 @@ export async function deleteCurrentSession() {
   cookieStore.delete(SESSION_COOKIE);
 }
 
-export async function getAuthenticatedUser() {
+export const getAuthenticatedUser = cache(async function getAuthenticatedUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -121,7 +122,7 @@ export async function getAuthenticatedUser() {
   void _;
   void __;
   return user;
-}
+});
 
 function hashSessionToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
