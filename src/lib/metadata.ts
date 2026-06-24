@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import type { SourcePlatform } from "@prisma/client";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { detectPlatform } from "@/lib/platform";
@@ -103,11 +104,6 @@ function findPublishedDate(value: unknown): Date | undefined {
   return undefined;
 }
 
-type YouTubeMetadata = {
-  authorName?: string;
-  publishedAt?: Date;
-};
-
 type PlatformMetadata = {
   title?: string;
   description?: string;
@@ -117,6 +113,30 @@ type PlatformMetadata = {
   postText?: string;
   mediaUrls?: string[];
 };
+
+type FetchedMetadata = {
+  title: string | undefined;
+  description: string | undefined;
+  thumbnailUrl: string | undefined;
+  authorName: string | undefined;
+  publishedAt: Date | undefined;
+  postText?: string;
+  mediaUrls?: string[];
+  domain: string;
+  sourcePlatform: SourcePlatform;
+};
+
+function hasMetadata(metadata: PlatformMetadata) {
+  return Boolean(
+    metadata.title ||
+      metadata.description ||
+      metadata.thumbnailUrl ||
+      metadata.authorName ||
+      metadata.publishedAt ||
+      metadata.postText ||
+      metadata.mediaUrls?.length,
+  );
+}
 
 async function fetchDiscoveredOEmbed(
   $: cheerio.CheerioAPI,
@@ -161,10 +181,23 @@ async function fetchDiscoveredOEmbed(
   }
 }
 
-async function fetchYouTubeMetadata(url: URL, html: string) {
-  const metadata: YouTubeMetadata = {
-    publishedAt: extractYouTubePublishedAt(html),
+async function fetchYouTubeMetadata(
+  url: URL,
+  html: string,
+): Promise<PlatformMetadata> {
+  const videoId = extractYouTubeVideoId(url);
+  const videoThumbnailUrl = videoId
+    ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+    : undefined;
+  const metadata: PlatformMetadata = {
+    ...extractYouTubeHtmlMetadata(html),
+    publishedAt: html ? extractYouTubePublishedAt(html) : undefined,
   };
+  metadata.thumbnailUrl = metadata.thumbnailUrl || videoThumbnailUrl;
+  metadata.mediaUrls =
+    metadata.mediaUrls?.length || !metadata.thumbnailUrl
+      ? metadata.mediaUrls
+      : [metadata.thumbnailUrl];
 
   try {
     const oEmbedUrl = new URL("https://www.youtube.com/oembed");
@@ -175,14 +208,83 @@ async function fetchYouTubeMetadata(url: URL, html: string) {
       signal: AbortSignal.timeout(10_000),
     });
     if (response.ok) {
-      const result = (await response.json()) as { author_name?: string };
-      metadata.authorName = result.author_name?.trim() || undefined;
+      const result = (await response.json()) as {
+        title?: string;
+        author_name?: string;
+        thumbnail_url?: string;
+      };
+      metadata.title = cleanMetadataValue(result.title) || metadata.title;
+      metadata.description =
+        cleanMetadataValue(result.title) || metadata.description;
+      metadata.authorName =
+        cleanMetadataValue(result.author_name) || metadata.authorName;
+      metadata.thumbnailUrl =
+        result.thumbnail_url?.trim() || metadata.thumbnailUrl;
+      metadata.postText = cleanMetadataValue(result.title) || metadata.postText;
+      metadata.mediaUrls = result.thumbnail_url
+        ? [result.thumbnail_url]
+        : metadata.mediaUrls;
     }
   } catch {
     // The page metadata is still useful when oEmbed is temporarily unavailable.
   }
 
   return metadata;
+}
+
+function extractYouTubeVideoId(url: URL) {
+  if (url.hostname === "youtu.be") {
+    return url.pathname.split("/").filter(Boolean)[0];
+  }
+
+  const watchVideoId = url.searchParams.get("v");
+  if (watchVideoId) return watchVideoId;
+
+  const pathVideoId = url.pathname.match(
+    /^\/(?:shorts|embed|live)\/([^/?#]+)/,
+  )?.[1];
+  return pathVideoId;
+}
+
+function extractYouTubeHtmlMetadata(html: string): PlatformMetadata {
+  if (!html) return {};
+
+  const authorName = cleanAuthorName(
+    decodeJsonString(
+      html.match(/"ownerChannelName"\s*:\s*"([^"]+)"/)?.[1] ||
+        html.match(
+          /"shortBylineText"\s*:\s*{[\s\S]{0,1200}?"text"\s*:\s*"([^"]+)"/,
+        )?.[1] ||
+        html.match(
+          /"ownerText"\s*:\s*{[\s\S]{0,1200}?"text"\s*:\s*"([^"]+)"/,
+        )?.[1],
+    ),
+  );
+  const title = cleanMetadataValue(
+    decodeJsonString(
+      html.match(/"videoDetails"\s*:\s*{[\s\S]{0,3000}?"title"\s*:\s*"([^"]+)"/)
+        ?.[1],
+    ),
+  );
+  const thumbnailUrl = normalizeMetadataUrl(
+    decodeJsonString(
+      html.match(
+        /"videoDetails"\s*:\s*{[\s\S]{0,5000}?"thumbnail"\s*:\s*{[\s\S]{0,1200}?"url"\s*:\s*"([^"]+)"/,
+      )?.[1] ||
+        html.match(/"thumbnailUrl"\s*:\s*\[\s*"([^"]+)"/)?.[1] ||
+        html.match(/"thumbnail"\s*:\s*{[\s\S]{0,1200}?"url"\s*:\s*"([^"]+)"/)
+          ?.[1],
+    ),
+  );
+
+  return {
+    title,
+    description: title,
+    authorName,
+    thumbnailUrl,
+    postText: title,
+    mediaUrls: thumbnailUrl ? [thumbnailUrl] : [],
+  };
 }
 
 function extractYouTubePublishedAt(html: string) {
@@ -357,10 +459,17 @@ function extractThreadsMetadata(
       'meta[name="description"]',
     ]),
   );
-  const authorMatch = title?.match(/^(.+?)\s+\(@([^)]+)\)\s+on Threads$/i);
+  const authorMatch =
+    title?.match(/^(.+?)\s+\(@([^)]+)\)\s+on Threads(?:\s*\|.*)?$/i) ||
+    title?.match(/^(.+?)\s+on Threads(?:\s*\|.*)?$/i);
+  const twitterCreator = cleanAuthorName(
+    content($, ['meta[name="twitter:creator"]']),
+  );
   const authorName = authorMatch
-    ? `${authorMatch[1].trim()} (@${authorMatch[2].trim()})`
-    : undefined;
+    ? authorMatch[2]
+      ? `${authorMatch[1].trim()} (@${authorMatch[2].trim()})`
+      : authorMatch[1].trim()
+    : twitterCreator;
   const candidateThumbnailUrl = content($, [
     'meta[property="og:image"]',
     'meta[name="twitter:image"]',
@@ -527,6 +636,21 @@ function decodeJsonString(value: string | undefined) {
   }
 }
 
+function normalizeMetadataUrl(value: string | undefined) {
+  const cleaned = value?.replace(/\\u0026/g, "&").trim();
+  if (!cleaned || !/^https?:\/\//i.test(cleaned)) return undefined;
+  return cleaned;
+}
+
+function cleanCanonicalUrl(value: string | undefined) {
+  const cleaned = value?.trim();
+  if (!cleaned) return undefined;
+  if (["undefined", "null", "#"].includes(cleaned.toLowerCase())) {
+    return undefined;
+  }
+  return cleaned;
+}
+
 function parseValidDate(value: string | number | undefined) {
   if (!value) return undefined;
   const date = new Date(value);
@@ -539,34 +663,33 @@ function parseValidDate(value: string | number | undefined) {
 async function fetchThreadsPreviewMetadata(
   url: URL,
 ): Promise<PlatformMetadata> {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Twitterbot/1.0",
-        Accept: "text/html,application/xhtml+xml",
-      },
-      cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!response.ok) return {};
+  for (const userAgent of [
+    "Twitterbot/1.0",
+    "facebookexternalhit/1.1",
+    "Mozilla/5.0 (compatible; PostfolioBot/0.1; +https://example.com)",
+  ]) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": userAgent,
+          Accept: "text/html,application/xhtml+xml",
+        },
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!response.ok) continue;
 
-    const $ = cheerio.load((await response.text()).slice(0, 2_000_000));
-    const candidateThumbnailUrl = content($, [
-      'meta[property="og:image"]',
-      'meta[name="twitter:image"]',
-    ]);
-    const thumbnailUrl =
-      candidateThumbnailUrl && !isThreadsProfileImage(candidateThumbnailUrl)
-        ? candidateThumbnailUrl
-        : undefined;
+      const type = response.headers.get("content-type") ?? "";
+      if (!type.includes("text/html")) continue;
 
-    return {
-      thumbnailUrl,
-      mediaUrls: thumbnailUrl ? [thumbnailUrl] : [],
-    };
-  } catch {
-    return {};
+      const $ = cheerio.load((await response.text()).slice(0, 2_000_000));
+      const metadata = extractThreadsMetadata($);
+      if (hasMetadata(metadata)) return metadata;
+    } catch {
+      // Try the next preview user agent.
+    }
   }
+  return {};
 }
 
 function isThreadsProfileImage(url: string) {
@@ -575,6 +698,32 @@ function isThreadsProfileImage(url: string) {
     /\/t51\.82787-19\//i.test(url) ||
     /\/t51\.2885-19\//i.test(url)
   );
+}
+
+async function fetchPlatformFallbackMetadata(
+  url: URL,
+  sourcePlatform = detectPlatform(url.hostname),
+): Promise<FetchedMetadata | undefined> {
+  const metadata =
+    sourcePlatform === "YOUTUBE"
+      ? await fetchYouTubeMetadata(url, "")
+      : sourcePlatform === "THREADS"
+        ? await fetchThreadsPreviewMetadata(url)
+        : {};
+
+  if (!hasMetadata(metadata)) return undefined;
+
+  return {
+    title: metadata.title,
+    description: metadata.description,
+    thumbnailUrl: metadata.thumbnailUrl,
+    authorName: metadata.authorName,
+    publishedAt: metadata.publishedAt,
+    postText: metadata.postText,
+    mediaUrls: metadata.mediaUrls || [],
+    domain: url.hostname.replace(/^www\./, ""),
+    sourcePlatform,
+  };
 }
 
 export async function fetchUrlMetadata(rawUrl: string) {
@@ -610,12 +759,14 @@ export async function fetchUrlMetadata(rawUrl: string) {
 
     const type = response.headers.get("content-type") ?? "";
     if (!response.ok || !type.includes("text/html")) {
+      const fallbackMetadata = await fetchPlatformFallbackMetadata(url);
+      if (fallbackMetadata) return fallbackMetadata;
       throw new Error("ページ情報を取得できませんでした。");
     }
 
     const html = (await response.text()).slice(0, 4_000_000);
     const $ = cheerio.load(html);
-    const canonical = $('link[rel="canonical"]').attr("href");
+    const canonical = cleanCanonicalUrl($('link[rel="canonical"]').attr("href"));
     const finalUrl = new URL(canonical || url.toString(), url);
     const sourcePlatform = detectPlatform(finalUrl.hostname);
     const enrichedContent =
@@ -644,6 +795,7 @@ export async function fetchUrlMetadata(rawUrl: string) {
     const structuredAuthorName = findAuthorNameFromStructuredData($);
 
     const title =
+      youTubeMetadata?.title ||
       platformMetadata.title ||
       discoveredMetadata.title ||
       cleanMetadataValue(
@@ -651,6 +803,7 @@ export async function fetchUrlMetadata(rawUrl: string) {
       ) ||
       cleanMetadataValue($("title").first().text());
     const description =
+      youTubeMetadata?.description ||
       platformMetadata.description ||
       discoveredMetadata.description ||
       cleanMetadataValue(
@@ -661,6 +814,7 @@ export async function fetchUrlMetadata(rawUrl: string) {
         ]),
       );
     const fallbackThumbnailUrl =
+      youTubeMetadata?.thumbnailUrl ||
       discoveredMetadata.thumbnailUrl ||
       content($, [
         'meta[property="og:image"]',
@@ -700,12 +854,15 @@ export async function fetchUrlMetadata(rawUrl: string) {
       sourcePlatform,
       postText:
         enrichedContent?.postText ||
+        youTubeMetadata?.postText ||
         platformMetadata.postText ||
         discoveredMetadata.postText ||
         description,
       mediaUrls:
         enrichedContent?.mediaUrls?.length
           ? enrichedContent.mediaUrls
+          : youTubeMetadata?.mediaUrls?.length
+            ? youTubeMetadata.mediaUrls
           : platformMetadata.mediaUrls?.length
             ? platformMetadata.mediaUrls
             : discoveredMetadata.mediaUrls?.length
