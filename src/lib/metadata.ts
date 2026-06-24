@@ -138,6 +138,21 @@ function hasMetadata(metadata: PlatformMetadata) {
   );
 }
 
+function mergePlatformMetadata(
+  base: PlatformMetadata,
+  override: PlatformMetadata,
+): PlatformMetadata {
+  return {
+    title: override.title || base.title,
+    description: override.description || base.description,
+    thumbnailUrl: override.thumbnailUrl || base.thumbnailUrl,
+    authorName: override.authorName || base.authorName,
+    publishedAt: override.publishedAt || base.publishedAt,
+    postText: override.postText || base.postText,
+    mediaUrls: override.mediaUrls?.length ? override.mediaUrls : base.mediaUrls,
+  };
+}
+
 async function fetchDiscoveredOEmbed(
   $: cheerio.CheerioAPI,
   pageUrl: URL,
@@ -834,10 +849,10 @@ export async function fetchUrlMetadata(rawUrl: string) {
               ...(await fetchInstagramOEmbedMetadata(finalUrl)),
             }
         : sourcePlatform === "THREADS"
-          ? {
-              ...extractThreadsMetadata($, html),
-              ...(await fetchThreadsPreviewMetadata(finalUrl)),
-            }
+          ? mergePlatformMetadata(
+              extractThreadsMetadata($, html),
+              await fetchThreadsPreviewMetadata(finalUrl),
+            )
         : sourcePlatform === "SUBSTACK"
           ? extractSubstackMetadata($, finalUrl, html)
           : {};
