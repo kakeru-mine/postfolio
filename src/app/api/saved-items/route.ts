@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError } from "@/lib/http";
+import { persistMetadataMedia } from "@/lib/image-storage";
 import { fetchUrlMetadata } from "@/lib/metadata";
 import { prisma } from "@/lib/prisma";
 import {
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     };
 
     try {
-      metadata = await fetchUrlMetadata(normalizedUrl);
+      metadata = await persistMetadataMedia(await fetchUrlMetadata(normalizedUrl));
     } catch {
       // Saving the URL is more important than metadata enrichment in Phase 1.
     }

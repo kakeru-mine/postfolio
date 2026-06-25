@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError } from "@/lib/http";
+import { persistMetadataMedia } from "@/lib/image-storage";
 import { fetchUrlMetadata } from "@/lib/metadata";
 import { prisma } from "@/lib/prisma";
 import { updateSavedItemPublishedAt } from "@/lib/saved-item-published-at";
@@ -25,7 +26,9 @@ export async function PATCH(_: NextRequest, context: Context) {
       );
     }
 
-    const metadata = await fetchUrlMetadata(item.normalizedUrl);
+    const metadata = await persistMetadataMedia(
+      await fetchUrlMetadata(item.normalizedUrl),
+    );
     const { publishedAt, ...storedMetadata } = metadata;
     // Avoid overwriting existing values with empty/undefined results from a failed fetch
     const dataToUpdate = Object.fromEntries(
