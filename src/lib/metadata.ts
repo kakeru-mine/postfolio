@@ -2,6 +2,7 @@ import * as cheerio from "cheerio";
 import type { SourcePlatform } from "@prisma/client";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
+import { assertNotLiveBroadcast } from "@/lib/live-broadcast";
 import { detectPlatform } from "@/lib/platform";
 import { ensureSystemCa } from "@/lib/system-ca";
 import { fetchXContent } from "@/lib/x-content";
@@ -797,6 +798,9 @@ export async function fetchUrlMetadata(rawUrl: string) {
 
   try {
     let url = new URL(rawUrl);
+    // Reject URL-identifiable live broadcasts (TikTok LIVE, X Spaces, ...)
+    // before spending a request on them.
+    assertNotLiveBroadcast(url, detectPlatform(url.hostname), "");
     let response: Response | undefined;
 
     for (let redirectCount = 0; redirectCount <= 4; redirectCount += 1) {
@@ -834,6 +838,8 @@ export async function fetchUrlMetadata(rawUrl: string) {
     const canonical = cleanCanonicalUrl($('link[rel="canonical"]').attr("href"));
     const finalUrl = new URL(canonical || url.toString(), url);
     const sourcePlatform = detectPlatform(finalUrl.hostname);
+    // YouTube live/premiere status can only be read from the page HTML.
+    assertNotLiveBroadcast(finalUrl, sourcePlatform, html);
     const enrichedContent =
       sourcePlatform === "X" ? await fetchXContent(finalUrl.toString()) : null;
     const youTubeMetadata =

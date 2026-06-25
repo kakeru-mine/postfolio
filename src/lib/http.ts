@@ -2,10 +2,14 @@ import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { AuthenticationError } from "@/lib/auth";
+import { LiveBroadcastError } from "@/lib/live-broadcast";
 
 export function apiError(error: unknown) {
   if (error instanceof AuthenticationError) {
     return NextResponse.json({ error: error.message }, { status: 401 });
+  }
+  if (error instanceof LiveBroadcastError) {
+    return NextResponse.json({ error: error.message }, { status: 422 });
   }
   if (error instanceof ZodError) {
     return NextResponse.json(
