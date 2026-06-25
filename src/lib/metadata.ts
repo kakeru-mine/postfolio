@@ -798,9 +798,6 @@ export async function fetchUrlMetadata(rawUrl: string) {
 
   try {
     let url = new URL(rawUrl);
-    // Reject URL-identifiable live broadcasts (TikTok LIVE, X Spaces, ...)
-    // before spending a request on them.
-    assertNotLiveBroadcast(url, detectPlatform(url.hostname), "");
     let response: Response | undefined;
 
     for (let redirectCount = 0; redirectCount <= 4; redirectCount += 1) {
@@ -838,8 +835,9 @@ export async function fetchUrlMetadata(rawUrl: string) {
     const canonical = cleanCanonicalUrl($('link[rel="canonical"]').attr("href"));
     const finalUrl = new URL(canonical || url.toString(), url);
     const sourcePlatform = detectPlatform(finalUrl.hostname);
-    // YouTube live/premiere status can only be read from the page HTML.
-    assertNotLiveBroadcast(finalUrl, sourcePlatform, html);
+    // Reject broadcasts that are airing or scheduled (YouTube live/premiere,
+    // TikTok LIVE, X Spaces/Broadcasts, Instagram Live). Ended archives pass.
+    await assertNotLiveBroadcast(finalUrl, sourcePlatform, html);
     const enrichedContent =
       sourcePlatform === "X" ? await fetchXContent(finalUrl.toString()) : null;
     const youTubeMetadata =

@@ -3,8 +3,8 @@ import type { SourcePlatform } from "@prisma/client";
 /**
  * Thrown when a URL points to a live broadcast that is currently airing or has
  * not started yet (YouTube live/premiere, TikTok LIVE, X Spaces/Broadcasts,
- * Instagram Live, ...). These have no stable content to capture — only ended
- * archives should be saved.
+ * Instagram Live, ...). These have no stable content to capture; only ended
+ * broadcasts / archives should be saved.
  */
 export class LiveBroadcastError extends Error {
   constructor(
@@ -29,15 +29,47 @@ function isYouTubeLiveOrUpcoming(html: string) {
   );
 }
 
-// TikTok LIVE rooms live at /@user/live and only exist while airing.
-function isTikTokLive(url: URL) {
-  return /\/live\/?$/i.test(url.pathname);
+// TikTok LIVE rooms live at /@user/live. The embedded data carries
+// `liveRoomStatus`: 2 while the room is airing, 0/other when the streamer is
+// offline. Block only the airing state so ended rooms stay saveable.
+function isTikTokLiveNow(url: URL, html: string) {
+  if (!/\/live\/?$/i.test(url.pathname)) return false;
+  return /"liveRoomStatus"\s*:\s*2\b/.test(html);
 }
 
-// X live formats: audio Spaces (/i/spaces/...) and video Broadcasts
-// (/i/broadcasts/...). Regular posts use /<user>/status/<id>.
-function isXLive(url: URL) {
-  return /^\/i\/(spaces|broadcasts)\//i.test(url.pathname);
+function xSpaceId(url: URL) {
+  return url.pathname.match(/^\/i\/spaces\/([A-Za-z0-9]+)/)?.[1];
+}
+
+function isXBroadcast(url: URL) {
+  return /^\/i\/broadcasts\//i.test(url.pathname);
+}
+
+// X Spaces state can't be scraped from the bot-facing HTML, so we ask the API.
+// "live"/"scheduled" are blocked; "ended" (a replay/recording) is allowed.
+// When the token is missing or the lookup fails we can't tell, and we err on
+// the side of letting recordings through.
+async function isXSpaceLiveNow(spaceId: string) {
+  const bearerToken = process.env.X_BEARER_TOKEN;
+  if (!bearerToken) return false;
+
+  try {
+    const response = await fetch(
+      `https://api.x.com/2/spaces/${spaceId}?space.fields=state`,
+      {
+        headers: { Authorization: `Bearer ${bearerToken}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
+    if (!response.ok) return false;
+
+    const result = (await response.json()) as { data?: { state?: string } };
+    const state = result.data?.state?.toLowerCase();
+    return state === "live" || state === "scheduled";
+  } catch {
+    return false;
+  }
 }
 
 // Instagram Live broadcasts surface under a /live/ path segment. Regular posts
@@ -48,18 +80,31 @@ function isInstagramLive(url: URL) {
 
 /**
  * Throws {@link LiveBroadcastError} when the URL is a live / upcoming broadcast.
- * `html` is only needed for YouTube; pass an empty string for a URL-only check.
+ * `html` is the fetched page HTML (used for YouTube and TikTok); pass an empty
+ * string when it isn't available yet.
  */
-export function assertNotLiveBroadcast(
+export async function assertNotLiveBroadcast(
   url: URL,
   sourcePlatform: SourcePlatform,
   html: string,
 ) {
-  const isLive =
-    (sourcePlatform === "YOUTUBE" && isYouTubeLiveOrUpcoming(html)) ||
-    (sourcePlatform === "TIKTOK" && isTikTokLive(url)) ||
-    (sourcePlatform === "X" && isXLive(url)) ||
-    (sourcePlatform === "INSTAGRAM" && isInstagramLive(url));
+  let isLive = false;
+
+  if (sourcePlatform === "YOUTUBE") {
+    isLive = isYouTubeLiveOrUpcoming(html);
+  } else if (sourcePlatform === "TIKTOK") {
+    isLive = isTikTokLiveNow(url, html);
+  } else if (sourcePlatform === "INSTAGRAM") {
+    isLive = isInstagramLive(url);
+  } else if (sourcePlatform === "X") {
+    if (isXBroadcast(url)) {
+      // Live video broadcasts have no recoverable archive at this URL.
+      isLive = true;
+    } else {
+      const spaceId = xSpaceId(url);
+      isLive = spaceId ? await isXSpaceLiveNow(spaceId) : false;
+    }
+  }
 
   if (isLive) throw new LiveBroadcastError();
 }
