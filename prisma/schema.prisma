@@ -33,6 +33,8 @@ model User {
   name                    String?
   avatarUrl               String?
   passwordHash            String?
+  failedLoginAttempts     Int                @default(0)
+  lockedUntil             DateTime?
   plan                    SubscriptionPlan   @default(FREE)
   stripeCustomerId        String?            @unique
   stripeSubscriptionId    String?            @unique

@@ -15,6 +15,12 @@ const scrypt = promisify(scryptCallback);
 const SESSION_COOKIE = "postfolio_session";
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 
+// Brute-force protection: lock an account after too many consecutive failed
+// logins for a cooldown window. Tracked in the database so it holds across
+// serverless instances.
+export const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+export const LOGIN_LOCK_DURATION_MS = 15 * 60 * 1000;
+
 export class AuthenticationError extends Error {
   constructor() {
     super("ログインが必要です。");
@@ -38,6 +44,40 @@ export async function verifyPassword(password: string, storedHash: string) {
     storedKey.length === derivedKey.length &&
     timingSafeEqual(storedKey, derivedKey)
   );
+}
+
+/**
+ * Records a failed login. Once the consecutive failure count reaches the
+ * threshold, the account is locked for {@link LOGIN_LOCK_DURATION_MS} and the
+ * counter resets so the next window starts fresh after the lock expires.
+ */
+export async function registerFailedLogin(
+  userId: string,
+  currentAttempts: number,
+) {
+  if (currentAttempts + 1 >= MAX_FAILED_LOGIN_ATTEMPTS) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        failedLoginAttempts: 0,
+        lockedUntil: new Date(Date.now() + LOGIN_LOCK_DURATION_MS),
+      },
+    });
+    return;
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { failedLoginAttempts: { increment: 1 } },
+  });
+}
+
+/** Clears the failed-login counter and lock after a successful login. */
+export async function clearFailedLogins(userId: string) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { failedLoginAttempts: 0, lockedUntil: null },
+  });
 }
 
 export async function createSession(userId: string) {
