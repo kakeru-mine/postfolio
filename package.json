@@ -11,6 +11,7 @@
     "manual:videos": "node scripts/generate-manual-videos.mjs",
     "manual:record-videos": "node scripts/record-manual-videos.mjs",
     "manual:record-register": "node scripts/record-register-smooth-videos.mjs",
+    "backfill:thumbnails": "tsx scripts/backfill-thumbnails.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts"

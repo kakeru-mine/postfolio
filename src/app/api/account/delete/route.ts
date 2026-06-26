@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { deleteCurrentSession } from "@/lib/auth";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
+import { cleanupOrphanedImages } from "@/lib/saved-item-cleanup";
 import { getCurrentUser } from "@/lib/user";
+
+// Removing re-hosted images for every saved item can take a while.
+export const maxDuration = 60;
 
 export async function POST() {
   try {
@@ -23,8 +27,16 @@ export async function POST() {
 
     const deletedEmail = user.email;
     const deletedName = user.name;
+    // Capture image URLs before the cascade delete removes the rows.
+    const storedImages = await prisma.savedItem.findMany({
+      where: { userId: user.id },
+      select: { thumbnailUrl: true, mediaUrls: true },
+    });
     await prisma.user.delete({ where: { id: user.id } });
     await deleteCurrentSession();
+    await cleanupOrphanedImages(storedImages).catch((error) => {
+      console.error("Account deletion image cleanup failed", error);
+    });
     await sendAccountDeletedEmail({
       email: deletedEmail,
       name: deletedName,
