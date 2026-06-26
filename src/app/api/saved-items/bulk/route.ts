@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
+import { cleanupOrphanedImages } from "@/lib/saved-item-cleanup";
 import { getCurrentUser } from "@/lib/user";
 
 const itemIdsSchema = z.array(z.string().min(1)).min(1).max(100);
@@ -31,7 +32,13 @@ export async function POST(request: NextRequest) {
     const itemIds = [...new Set(input.itemIds)];
     const items = await prisma.savedItem.findMany({
       where: { id: { in: itemIds }, userId: user.id },
-      select: { id: true, collectionId: true, userTags: true },
+      select: {
+        id: true,
+        collectionId: true,
+        userTags: true,
+        thumbnailUrl: true,
+        mediaUrls: true,
+      },
     });
 
     if (items.length !== itemIds.length) {
@@ -58,6 +65,7 @@ export async function POST(request: NextRequest) {
       await prisma.savedItem.deleteMany({
         where: { id: { in: itemIds }, userId: user.id },
       });
+      await cleanupOrphanedImages(items);
     } else if (input.action === "move") {
       await prisma.savedItem.updateMany({
         where: { id: { in: itemIds }, userId: user.id },

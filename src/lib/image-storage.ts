@@ -17,6 +17,41 @@ function storageConfig() {
   return { url, key };
 }
 
+function publicUrlPrefix(config: { url: string; key: string }) {
+  return `${config.url}/storage/v1/object/public/${BUCKET}/`;
+}
+
+/** True when the URL points at an image we previously re-hosted ourselves. */
+export function isOwnStorageUrl(rawUrl: string) {
+  const config = storageConfig();
+  return Boolean(config) && rawUrl.startsWith(publicUrlPrefix(config!));
+}
+
+/** Best-effort removal of a previously re-hosted image from Supabase Storage. */
+export async function deleteStoredImage(rawUrl: string) {
+  const config = storageConfig();
+  if (!config) return;
+
+  const prefix = publicUrlPrefix(config);
+  if (!rawUrl.startsWith(prefix)) return;
+  const objectPath = rawUrl.slice(prefix.length).split("?")[0];
+  if (!objectPath) return;
+
+  try {
+    await fetch(`${config.url}/storage/v1/object/${BUCKET}/${objectPath}`, {
+      method: "DELETE",
+      headers: {
+        apikey: config.key,
+        Authorization: `Bearer ${config.key}`,
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch {
+    // Cleanup is best-effort; a leftover object is harmless.
+  }
+}
+
 function needsPersist(rawUrl: string) {
   try {
     const host = new URL(rawUrl).hostname;
@@ -112,15 +147,28 @@ export async function persistExternalImage(rawUrl: string): Promise<string> {
 export async function persistMetadataMedia<
   T extends { thumbnailUrl?: string; mediaUrls?: string[] },
 >(metadata: T): Promise<T> {
-  const thumbnailUrl = metadata.thumbnailUrl
-    ? await persistExternalImage(metadata.thumbnailUrl)
-    : metadata.thumbnailUrl;
+  // The thumbnail is usually also the first media URL, so persist each distinct
+  // URL once (in parallel) and reuse the result to avoid duplicate downloads.
+  const uniqueUrls = new Set<string>();
+  if (metadata.thumbnailUrl) uniqueUrls.add(metadata.thumbnailUrl);
+  for (const url of metadata.mediaUrls ?? []) uniqueUrls.add(url);
+  if (!uniqueUrls.size) return metadata;
 
-  const mediaUrls = metadata.mediaUrls?.length
-    ? await Promise.all(
-        metadata.mediaUrls.map((url) => persistExternalImage(url)),
-      )
-    : metadata.mediaUrls;
+  const persisted = new Map(
+    await Promise.all(
+      [...uniqueUrls].map(
+        async (url) => [url, await persistExternalImage(url)] as const,
+      ),
+    ),
+  );
 
-  return { ...metadata, thumbnailUrl, mediaUrls };
+  return {
+    ...metadata,
+    thumbnailUrl: metadata.thumbnailUrl
+      ? persisted.get(metadata.thumbnailUrl) ?? metadata.thumbnailUrl
+      : metadata.thumbnailUrl,
+    mediaUrls: metadata.mediaUrls?.length
+      ? metadata.mediaUrls.map((url) => persisted.get(url) ?? url)
+      : metadata.mediaUrls,
+  };
 }

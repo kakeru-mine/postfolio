@@ -15,6 +15,10 @@ import { savedItemCreateSchema } from "@/lib/validation";
 import { updateSavedItemPublishedAt } from "@/lib/saved-item-published-at";
 import { assertCanSaveItem, UsageLimitError } from "@/lib/usage";
 
+// Saving fetches page metadata and re-hosts CDN images, which can exceed the
+// platform's default function timeout.
+export const maxDuration = 60;
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();

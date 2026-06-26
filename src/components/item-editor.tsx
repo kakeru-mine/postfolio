@@ -79,7 +79,7 @@ export function ItemEditor({
       return;
     }
 
-    router.push("/");
+    router.push("/items");
     router.refresh();
   }
 

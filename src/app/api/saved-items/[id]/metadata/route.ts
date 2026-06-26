@@ -7,6 +7,10 @@ import { updateSavedItemPublishedAt } from "@/lib/saved-item-published-at";
 import { ensureSystemCa } from "@/lib/system-ca";
 import { getCurrentUser } from "@/lib/user";
 
+// Re-fetching metadata downloads and re-hosts CDN images, which can exceed the
+// platform's default function timeout.
+export const maxDuration = 60;
+
 type Context = { params: Promise<{ id: string }> };
 
 export async function PATCH(_: NextRequest, context: Context) {

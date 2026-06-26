@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
+import { cleanupOrphanedImages } from "@/lib/saved-item-cleanup";
 import { getCurrentUser } from "@/lib/user";
 import { savedItemUpdateSchema } from "@/lib/validation";
 
@@ -75,7 +76,7 @@ export async function DELETE(_: NextRequest, context: Context) {
     const { id } = await context.params;
     const item = await prisma.savedItem.findFirst({
       where: { id, userId: user.id },
-      select: { collectionId: true },
+      select: { collectionId: true, thumbnailUrl: true, mediaUrls: true },
     });
     const result = await prisma.savedItem.deleteMany({
       where: { id, userId: user.id },
@@ -84,6 +85,8 @@ export async function DELETE(_: NextRequest, context: Context) {
     if (!result.count) {
       return NextResponse.json({ error: "保存アイテムが見つかりません。" }, { status: 404 });
     }
+
+    if (item) await cleanupOrphanedImages([item]);
 
     revalidatePath("/");
     revalidatePath("/collections");
