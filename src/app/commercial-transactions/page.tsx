@@ -3,9 +3,11 @@ import { ArrowLeft } from "lucide-react";
 import { StandaloneLanguageControls } from "@/components/standalone-language-controls";
 
 export default function CommercialTransactionsPage() {
-  const seller = process.env.LEGAL_SELLER_NAME || "Postfolio運営者";
   const responsiblePerson =
     process.env.LEGAL_RESPONSIBLE_PERSON || "峰芝 駆";
+  // 販売事業者は運営責任者と同一表記にする（個別に LEGAL_SELLER_NAME を
+  // 設定した場合のみ上書き）。
+  const seller = process.env.LEGAL_SELLER_NAME || responsiblePerson;
   const address =
     process.env.LEGAL_SELLER_ADDRESS ||
     "請求があった場合、遅滞なく開示します。";
