@@ -23,11 +23,12 @@ export async function POST(request: NextRequest) {
         email: string;
         name: string | null;
         passwordHash: string | null;
+        emailVerifiedAt: Date | null;
         failedLoginAttempts: number;
         lockedUntil: Date | null;
       }>
     >`
-      SELECT "id", "email", "name", "passwordHash", "failedLoginAttempts", "lockedUntil"
+      SELECT "id", "email", "name", "passwordHash", "emailVerifiedAt", "failedLoginAttempts", "lockedUntil"
       FROM "User"
       WHERE "email" = ${input.email.toLowerCase()}
       LIMIT 1
@@ -57,6 +58,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "メールアドレスまたはパスワードが正しくありません。" },
         { status: 401 },
+      );
+    }
+
+    if (!user.emailVerifiedAt) {
+      return NextResponse.json(
+        {
+          error:
+            "メールアドレスが未確認です。登録時に送信した確認メールのリンクから有効化してください。",
+          code: "EMAIL_NOT_VERIFIED",
+        },
+        { status: 403 },
       );
     }
 

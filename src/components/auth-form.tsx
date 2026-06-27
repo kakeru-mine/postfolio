@@ -8,15 +8,37 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const registering = mode === "register";
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [pendingMessage, setPendingMessage] = useState("");
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [resendNotice, setResendNotice] = useState("");
+
+  async function resendVerification() {
+    if (!unverifiedEmail) return;
+    setResendNotice("");
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+      const result = await response.json().catch(() => ({}));
+      setResendNotice(result.message ?? "確認メールを再送しました。");
+    } catch {
+      setResendNotice("再送に失敗しました。時間をおいてお試しください。");
+    }
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setError("");
+    setResendNotice("");
+    setUnverifiedEmail("");
     const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "");
     const body = {
       ...(registering ? { name: String(formData.get("name") ?? "") } : {}),
-      email: String(formData.get("email") ?? ""),
+      email,
       password: String(formData.get("password") ?? ""),
     };
 
@@ -28,7 +50,18 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       });
       const result = await response.json();
       if (!response.ok) {
+        if (result.code === "EMAIL_NOT_VERIFIED") {
+          setUnverifiedEmail(email);
+        }
         setError(result.error ?? "認証に失敗しました。");
+        return;
+      }
+
+      if (result.pending) {
+        setPendingMessage(
+          result.message ??
+            "確認メールを送信しました。メール内のリンクから登録を完了してください。",
+        );
         return;
       }
 
@@ -38,6 +71,25 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (pendingMessage) {
+    return (
+      <div className="mt-7 space-y-4 text-center">
+        <div className="rounded-xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-700">
+          {pendingMessage}
+        </div>
+        <p className="text-sm text-slate-500">
+          メールが届かない場合は、迷惑メールフォルダもご確認ください。
+        </p>
+        <Link
+          href="/login"
+          className="button-secondary inline-flex justify-center"
+        >
+          ログイン画面へ
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -81,6 +133,21 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>
       ) : null}
 
+      {unverifiedEmail ? (
+        <div className="space-y-2 text-center">
+          <button
+            type="button"
+            onClick={resendVerification}
+            className="text-sm font-bold text-[var(--primary)] underline"
+          >
+            確認メールを再送する
+          </button>
+          {resendNotice ? (
+            <p className="text-xs text-slate-500">{resendNotice}</p>
+          ) : null}
+        </div>
+      ) : null}
+
       <button
         type="submit"
         className="button-primary w-full justify-center py-3.5"
@@ -93,6 +160,18 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             ? "無料で会員登録"
             : "ログイン"}
       </button>
+
+      {!registering ? (
+        <p className="text-center text-sm">
+          <Link
+            href="/forgot-password"
+            className="font-bold text-[var(--primary)]"
+          >
+            パスワードをお忘れですか？
+          </Link>
+        </p>
+      ) : null}
+
       <p className="text-center text-sm text-slate-500">
         {registering ? "すでにアカウントをお持ちですか？" : "アカウントをお持ちでないですか？"}
         <Link

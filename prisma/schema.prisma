@@ -33,6 +33,7 @@ model User {
   name                    String?
   avatarUrl               String?
   passwordHash            String?
+  emailVerifiedAt         DateTime?
   failedLoginAttempts     Int                @default(0)
   lockedUntil             DateTime?
   plan                    SubscriptionPlan   @default(FREE)
@@ -50,8 +51,26 @@ model User {
   collections             Collection[]
   aiUsageMonths           AiUsageMonth[]
   sessions                Session[]
+  tokens                  UserToken[]
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @updatedAt
+}
+
+enum UserTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model UserToken {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      UserTokenType
+  tokenHash String        @unique
+  expiresAt DateTime
+  createdAt DateTime      @default(now())
+
+  @@index([userId, type])
 }
 
 model Session {

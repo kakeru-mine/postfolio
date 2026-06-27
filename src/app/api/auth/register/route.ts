@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createSession, hashPassword } from "@/lib/auth";
+import { hashPassword } from "@/lib/auth";
+import { createUserToken } from "@/lib/auth-tokens";
+import { sendVerificationEmail } from "@/lib/email";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
+import { appUrl } from "@/lib/stripe";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1, "表示名を入力してください。").max(50),
@@ -72,13 +75,20 @@ export async function POST(request: NextRequest) {
         });
     await prisma.$executeRaw`
       UPDATE "User"
-      SET "passwordHash" = ${passwordHash}, "updatedAt" = NOW()
+      SET "passwordHash" = ${passwordHash}, "emailVerifiedAt" = NULL, "updatedAt" = NOW()
       WHERE "id" = ${user.id}
     `;
 
-    await createSession(user.id);
+    // Require email ownership confirmation before the account can sign in.
+    const token = await createUserToken(user.id, "EMAIL_VERIFICATION");
+    const verifyUrl = `${appUrl(request.nextUrl.origin)}/verify-email?token=${token}`;
+    await sendVerificationEmail(email, verifyUrl);
+
     return NextResponse.json({
-      user: { id: user.id, name: user.name, email: user.email },
+      pending: true,
+      email,
+      message:
+        "確認メールを送信しました。メール内のリンクからメールアドレスの確認を完了してください。",
     });
   } catch (error) {
     return apiError(error);
