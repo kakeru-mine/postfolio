@@ -5,7 +5,7 @@ import { createUserToken } from "@/lib/auth-tokens";
 import { sendVerificationEmail } from "@/lib/email";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
-import { appUrl } from "@/lib/stripe";
+import { canonicalAppUrl } from "@/lib/stripe";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1, "表示名を入力してください。").max(50),
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     // Require email ownership confirmation before the account can sign in.
     const token = await createUserToken(user.id, "EMAIL_VERIFICATION");
-    const verifyUrl = `${appUrl(request.nextUrl.origin)}/verify-email?token=${token}`;
+    const verifyUrl = `${canonicalAppUrl(request.nextUrl.origin)}/verify-email?token=${token}`;
     await sendVerificationEmail(email, verifyUrl);
 
     return NextResponse.json({

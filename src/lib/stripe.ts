@@ -22,4 +22,16 @@ export function appUrl(requestOrigin?: string) {
   );
 }
 
+// For links sent in emails we must use the stable public URL, not the
+// per-request origin (which can be an ephemeral, access-protected deployment
+// URL). Prefer NEXT_PUBLIC_APP_URL so verification/reset links always point at
+// the canonical domain.
+export function canonicalAppUrl(requestOrigin?: string) {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ||
+    requestOrigin?.replace(/\/+$/, "") ||
+    "http://localhost:3000"
+  );
+}
+
 export class StripeConfigurationError extends Error {}

@@ -4,7 +4,7 @@ import { createUserToken } from "@/lib/auth-tokens";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
-import { appUrl } from "@/lib/stripe";
+import { canonicalAppUrl } from "@/lib/stripe";
 
 const schema = z.object({ email: z.string().trim().email() });
 
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     // Only send to accounts that actually have a password set.
     if (user && user.passwordHash) {
       const token = await createUserToken(user.id, "PASSWORD_RESET");
-      const resetUrl = `${appUrl(request.nextUrl.origin)}/reset-password?token=${token}`;
+      const resetUrl = `${canonicalAppUrl(request.nextUrl.origin)}/reset-password?token=${token}`;
       await sendPasswordResetEmail(user.email, resetUrl);
     }
 

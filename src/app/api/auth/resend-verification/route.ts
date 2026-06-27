@@ -4,7 +4,7 @@ import { createUserToken } from "@/lib/auth-tokens";
 import { sendVerificationEmail } from "@/lib/email";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
-import { appUrl } from "@/lib/stripe";
+import { canonicalAppUrl } from "@/lib/stripe";
 
 const schema = z.object({ email: z.string().trim().email() });
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     if (user && user.passwordHash && !user.emailVerifiedAt) {
       const token = await createUserToken(user.id, "EMAIL_VERIFICATION");
-      const verifyUrl = `${appUrl(request.nextUrl.origin)}/verify-email?token=${token}`;
+      const verifyUrl = `${canonicalAppUrl(request.nextUrl.origin)}/verify-email?token=${token}`;
       await sendVerificationEmail(user.email, verifyUrl);
     }
 
