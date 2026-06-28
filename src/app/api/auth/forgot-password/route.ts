@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createUserToken } from "@/lib/auth-tokens";
+import { createUserToken, tokenIssuedRecently } from "@/lib/auth-tokens";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
@@ -16,8 +16,12 @@ export async function POST(request: NextRequest) {
       select: { id: true, email: true, passwordHash: true },
     });
 
-    // Only send to accounts that actually have a password set.
-    if (user && user.passwordHash) {
+    // Only send to accounts that have a password, and throttle repeated requests.
+    if (
+      user &&
+      user.passwordHash &&
+      !(await tokenIssuedRecently(user.id, "PASSWORD_RESET"))
+    ) {
       const token = await createUserToken(user.id, "PASSWORD_RESET");
       const resetUrl = `${canonicalAppUrl(request.nextUrl.origin)}/reset-password?token=${token}`;
       await sendPasswordResetEmail(user.email, resetUrl);

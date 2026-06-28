@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createUserToken } from "@/lib/auth-tokens";
+import { createUserToken, tokenIssuedRecently } from "@/lib/auth-tokens";
 import { sendVerificationEmail } from "@/lib/email";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
@@ -16,7 +16,12 @@ export async function POST(request: NextRequest) {
       select: { id: true, email: true, emailVerifiedAt: true, passwordHash: true },
     });
 
-    if (user && user.passwordHash && !user.emailVerifiedAt) {
+    if (
+      user &&
+      user.passwordHash &&
+      !user.emailVerifiedAt &&
+      !(await tokenIssuedRecently(user.id, "EMAIL_VERIFICATION"))
+    ) {
       const token = await createUserToken(user.id, "EMAIL_VERIFICATION");
       const verifyUrl = `${canonicalAppUrl(request.nextUrl.origin)}/verify-email?token=${token}`;
       await sendVerificationEmail(user.email, verifyUrl);

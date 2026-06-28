@@ -7,8 +7,31 @@ const TOKEN_TTL_MS: Record<UserTokenType, number> = {
   PASSWORD_RESET: 60 * 60 * 1000, // 1 hour
 };
 
+// Minimum interval between sending the same type of email to a user, to throttle
+// repeated requests (abuse / inbox spam / quota exhaustion).
+export const RESEND_THROTTLE_MS = 60 * 1000;
+
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
+}
+
+/**
+ * True when a token of this type was issued to the user within `withinMs`,
+ * i.e. an email was just sent and another should be throttled.
+ */
+export async function tokenIssuedRecently(
+  userId: string,
+  type: UserTokenType,
+  withinMs: number = RESEND_THROTTLE_MS,
+) {
+  const recent = await prisma.userToken.count({
+    where: {
+      userId,
+      type,
+      createdAt: { gte: new Date(Date.now() - withinMs) },
+    },
+  });
+  return recent > 0;
 }
 
 /**
