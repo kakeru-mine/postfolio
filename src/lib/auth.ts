@@ -135,6 +135,7 @@ export const getAuthenticatedUser = cache(async function getAuthenticatedUser() 
       u."subscriptionStatus",
       u."subscriptionPeriodEnd",
       u."subscriptionCancelAtPeriodEnd",
+      u."scheduledPlan",
       u."themeBackground",
       u."themeMain",
       u."themeAccent",

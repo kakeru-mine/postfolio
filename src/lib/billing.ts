@@ -5,6 +5,22 @@ import { prisma } from "@/lib/prisma";
 
 const PAID_ACCESS_STATUSES = new Set(["active", "trialing", "past_due"]);
 
+/**
+ * Detaches the subscription schedule (a pending downgrade reservation) if one
+ * exists, leaving the subscription on its current plan. Best-effort.
+ */
+export async function releaseScheduleIfAny(
+  stripe: Stripe,
+  subscription: Stripe.Subscription,
+) {
+  if (!subscription.schedule) return;
+  const scheduleId =
+    typeof subscription.schedule === "string"
+      ? subscription.schedule
+      : subscription.schedule.id;
+  await stripe.subscriptionSchedules.release(scheduleId).catch(() => {});
+}
+
 export async function syncStripeSubscription(
   subscription: Stripe.Subscription,
   explicitUserId?: string,
@@ -39,6 +55,9 @@ export async function syncStripeSubscription(
         ? new Date(periodEnd * 1000)
         : null,
       subscriptionCancelAtPeriodEnd: subscription.cancel_at_period_end,
+      // Once the subscription is no longer governed by a schedule, any pending
+      // downgrade reservation has been applied or released.
+      ...(subscription.schedule ? {} : { scheduledPlan: null }),
     },
   });
 }

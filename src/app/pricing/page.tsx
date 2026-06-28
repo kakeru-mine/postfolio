@@ -2,7 +2,11 @@ import { Check } from "lucide-react";
 import { BillingActionButton } from "@/components/billing-action-button";
 import { CheckoutSync } from "@/components/checkout-sync";
 import { PageHeader } from "@/components/page-header";
-import { aiLimitLabel, planDefinitions } from "@/lib/plans";
+import {
+  aiLimitLabel,
+  getPlanDefinition,
+  planDefinitions,
+} from "@/lib/plans";
 import { requirePageUser } from "@/lib/user";
 
 type SearchParams = Promise<{ checkout?: string; session_id?: string }>;
@@ -17,6 +21,8 @@ export default async function PricingPage({
   const hasPaidSubscription = Boolean(
     user.stripeSubscriptionId && user.plan !== "FREE",
   );
+  const hasReservation =
+    user.subscriptionCancelAtPeriodEnd || Boolean(user.scheduledPlan);
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-5 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
@@ -40,6 +46,12 @@ export default async function PricingPage({
       {user.subscriptionCancelAtPeriodEnd && user.subscriptionPeriodEnd ? (
         <p className="mt-6 rounded-xl bg-rose-50 p-4 text-sm font-bold text-rose-700">
           現在の有料プランは契約期間の終了時にFreeへ切り替わる予定です。
+        </p>
+      ) : null}
+      {user.scheduledPlan && user.subscriptionPeriodEnd ? (
+        <p className="mt-6 rounded-xl bg-amber-50 p-4 text-sm font-bold text-amber-700">
+          契約期間の終了時に{getPlanDefinition(user.scheduledPlan).name}
+          プランへ切り替わる予定です。それまでは現在のプランをご利用いただけます。「予約を取り消す」で現在のプランを継続できます。
         </p>
       ) : null}
 
@@ -102,9 +114,9 @@ export default async function PricingPage({
                         : "Freeへ変更"}
                   </BillingActionButton>
                 ) : isCurrent ? (
-                  user.subscriptionCancelAtPeriodEnd ? (
+                  hasReservation ? (
                     <BillingActionButton action="resume" variant="secondary">
-                      解約予約を取り消す
+                      予約を取り消す
                     </BillingActionButton>
                   ) : (
                     <BillingActionButton
@@ -120,8 +132,11 @@ export default async function PricingPage({
                     action="change-plan"
                     plan={definition.plan}
                     variant="secondary"
+                    disabled={definition.plan === user.scheduledPlan}
                   >
-                    {definition.name}へ変更
+                    {definition.plan === user.scheduledPlan
+                      ? "変更予定"
+                      : `${definition.name}へ変更`}
                   </BillingActionButton>
                 ) : (
                   <BillingActionButton
@@ -160,7 +175,7 @@ export default async function PricingPage({
           />
           <Faq
             question="プラン変更はいつ反映されますか？"
-            answer="上位プランへの変更は、Stripeの請求ページで差額をお支払い後にすぐ反映されます。下位プランへの変更は、現在の契約期間の終了時に切り替わり、それまでは現在のプランをご利用いただけます。"
+            answer="上位プランへの変更は、差額（日割り）を即時に請求してすぐ反映されます。下位プランへの変更は、現在の契約期間の終了時に切り替わり、それまでは現在のプランをご利用いただけます。"
           />
           <Faq
             question="保存した投稿は消えますか？"

@@ -43,6 +43,7 @@ model User {
   subscriptionStatus      String?
   subscriptionPeriodEnd   DateTime?
   subscriptionCancelAtPeriodEnd Boolean            @default(false)
+  scheduledPlan           SubscriptionPlan?
   themeBackground         String             @default("#ffffff")
   themeMain               String             @default("#2563eb")
   themeAccent             String             @default("#ff6b6b")

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -29,6 +29,29 @@ export function BillingActionButton({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [preview, setPreview] = useState<{
+    isUpgrade: boolean;
+    amount?: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!confirmOpen || action !== "change-plan" || !plan) return;
+    let active = true;
+    setPreview(null);
+    fetch("/api/billing/preview-change", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan }),
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((result) => {
+        if (active && result) setPreview(result);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [confirmOpen, action, plan]);
 
   async function run() {
     setLoading(true);
@@ -114,6 +137,15 @@ export function BillingActionButton({
               {confirmationDescription(action)}
             </p>
             <ConfirmationDetails action={action} plan={plan} />
+            {action === "change-plan" && preview ? (
+              <p className="mt-4 rounded-xl bg-[var(--accent-soft)] p-3 text-sm font-bold leading-6 text-[var(--primary-dark)]">
+                {preview.isUpgrade
+                  ? preview.amount !== undefined
+                    ? `差額（日割り・税込）約 ¥${preview.amount.toLocaleString()} を、保存済みのお支払い方法に即時請求して切り替えます。`
+                    : "差額（日割り・税込）を、保存済みのお支払い方法に即時請求して切り替えます。"
+                  : "下位プランへの変更は追加請求なしで、現在の契約期間の終了時に切り替わります。"}
+              </p>
+            ) : null}
             {error ? (
               <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
                 {error}
@@ -177,7 +209,7 @@ function confirmationDescription(action: BillingAction) {
     return "以下の内容を確認後、Stripeの決済画面へ進みます。決済画面でも金額と支払方法をご確認ください。";
   }
   if (action === "change-plan") {
-    return "上位プランへの変更は、Stripeの請求ページで差額をお支払い後に切り替わります。下位プランへの変更は、現在の契約期間の終了時に切り替わります（それまでは現在のプランを利用できます）。";
+    return "上位プランへの変更は、差額を即時に請求してすぐ切り替わります。下位プランへの変更は、現在の契約期間の終了時に切り替わります（それまでは現在のプランを利用できます）。";
   }
   if (action === "cancel") {
     return "現在の有料プランを解約予約します。すぐに利用停止にはなりません。";

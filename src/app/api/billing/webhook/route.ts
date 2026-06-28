@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
             subscriptionStatus: subscription.status,
             subscriptionPeriodEnd: null,
             subscriptionCancelAtPeriodEnd: false,
+            scheduledPlan: null,
           },
         });
         break;

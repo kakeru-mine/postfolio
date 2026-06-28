@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { syncStripeSubscription } from "@/lib/billing";
+import { releaseScheduleIfAny, syncStripeSubscription } from "@/lib/billing";
 import { apiError } from "@/lib/http";
 import { getStripe, StripeConfigurationError } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/user";
@@ -14,7 +14,13 @@ export async function POST() {
       );
     }
 
-    const subscription = await getStripe().subscriptions.update(
+    const stripe = getStripe();
+    const current = await stripe.subscriptions.retrieve(
+      user.stripeSubscriptionId,
+    );
+    // Cancelling to Free supersedes any pending downgrade reservation.
+    await releaseScheduleIfAny(stripe, current);
+    const subscription = await stripe.subscriptions.update(
       user.stripeSubscriptionId,
       { cancel_at_period_end: true },
     );
