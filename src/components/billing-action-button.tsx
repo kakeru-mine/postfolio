@@ -27,11 +27,13 @@ export function BillingActionButton({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function run() {
     setLoading(true);
     setError("");
+    setNotice("");
     try {
       const response = await fetch(`/api/billing/${action}`, {
         method: "POST",
@@ -49,6 +51,9 @@ export function BillingActionButton({
       if (result.url) {
         window.location.href = result.url;
         return;
+      }
+      if (result.message) {
+        setNotice(result.message);
       }
       setConfirmOpen(false);
       router.refresh();
@@ -79,6 +84,11 @@ export function BillingActionButton({
       </button>
       {error ? (
         <p className="mt-2 text-center text-xs leading-5 text-rose-600">{error}</p>
+      ) : null}
+      {notice ? (
+        <p className="mt-2 rounded-lg bg-emerald-50 p-2 text-center text-xs leading-5 text-emerald-700">
+          {notice}
+        </p>
       ) : null}
       {confirmOpen ? (
         <div
@@ -167,7 +177,7 @@ function confirmationDescription(action: BillingAction) {
     return "以下の内容を確認後、Stripeの決済画面へ進みます。決済画面でも金額と支払方法をご確認ください。";
   }
   if (action === "change-plan") {
-    return "以下の内容でプランを変更します。上位プランへの変更時は差額を即時に請求し、お支払い完了後すぐに新しいプランへ切り替わります。";
+    return "上位プランへの変更は、Stripeの請求ページで差額をお支払い後に切り替わります。下位プランへの変更は、現在の契約期間の終了時に切り替わります（それまでは現在のプランを利用できます）。";
   }
   if (action === "cancel") {
     return "現在の有料プランを解約予約します。すぐに利用停止にはなりません。";

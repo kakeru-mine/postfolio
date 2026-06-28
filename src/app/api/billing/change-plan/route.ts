@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { syncStripeSubscription } from "@/lib/billing";
 import { apiError } from "@/lib/http";
-import { priceIdForPlan } from "@/lib/plans";
+import { getPlanDefinition, priceIdForPlan } from "@/lib/plans";
 import { getStripe, StripeConfigurationError } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/user";
 
@@ -45,37 +45,88 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const updated = await stripe.subscriptions.update(subscription.id, {
-      items: [{ id: item.id, price: priceId, quantity: 1 }],
-      // Invoice the proration difference immediately and only switch the plan
-      // once that charge is paid; if it can't be paid, the update is rejected.
-      proration_behavior: "always_invoice",
-      payment_behavior: "error_if_incomplete",
-      cancel_at_period_end: false,
-      metadata: { ...subscription.metadata, userId: user.id, plan },
+    const isUpgrade =
+      getPlanDefinition(plan).priceYen > getPlanDefinition(user.plan).priceYen;
+
+    if (isUpgrade) {
+      // Upgrade: create a proration invoice for the difference and let the
+      // customer pay it on Stripe's hosted invoice page. The plan switch is
+      // held as a pending update and only applied once the invoice is paid
+      // (the resulting subscription.updated webhook syncs the plan).
+      const updated = await stripe.subscriptions.update(subscription.id, {
+        items: [{ id: item.id, price: priceId, quantity: 1 }],
+        proration_behavior: "always_invoice",
+        payment_behavior: "default_incomplete",
+        cancel_at_period_end: false,
+        metadata: { ...subscription.metadata, userId: user.id, plan },
+        expand: ["latest_invoice"],
+      });
+
+      const invoice = updated.latest_invoice;
+      if (invoice && typeof invoice !== "string") {
+        if (invoice.status === "paid") {
+          await syncStripeSubscription(
+            await stripe.subscriptions.retrieve(subscription.id),
+            user.id,
+          );
+          return NextResponse.json({ success: true });
+        }
+        if (invoice.hosted_invoice_url) {
+          return NextResponse.json({ url: invoice.hosted_invoice_url });
+        }
+      }
+      return NextResponse.json(
+        {
+          error:
+            "差額の請求書を作成できませんでした。時間をおいて再度お試しください。",
+        },
+        { status: 502 },
+      );
+    }
+
+    // Downgrade: schedule the change for the end of the current period so the
+    // current plan stays usable until renewal. Don't change the plan now.
+    const schedule = subscription.schedule
+      ? await stripe.subscriptionSchedules.retrieve(
+          typeof subscription.schedule === "string"
+            ? subscription.schedule
+            : subscription.schedule.id,
+        )
+      : await stripe.subscriptionSchedules.create({
+          from_subscription: subscription.id,
+        });
+    const currentPhase = schedule.phases[0];
+
+    await stripe.subscriptionSchedules.update(schedule.id, {
+      end_behavior: "release",
+      proration_behavior: "none",
+      phases: [
+        {
+          items: [{ price: item.price.id, quantity: 1 }],
+          start_date: currentPhase.start_date,
+          end_date: currentPhase.end_date,
+        },
+        {
+          items: [{ price: priceId, quantity: 1 }],
+        },
+      ],
+      metadata: { userId: user.id, plan },
     });
-    await syncStripeSubscription(updated, user.id);
-    return NextResponse.json({ success: true });
+
+    const switchAt = item.current_period_end
+      ? new Date(item.current_period_end * 1000)
+      : null;
+    const dateLabel = switchAt
+      ? `${switchAt.getFullYear()}年${switchAt.getMonth() + 1}月${switchAt.getDate()}日`
+      : "次回更新日";
+    return NextResponse.json({
+      scheduled: true,
+      message: `${dateLabel}に${getPlanDefinition(plan).name}プランへ切り替わります。それまでは現在のプランをご利用いただけます。`,
+    });
   } catch (error) {
     if (error instanceof StripeConfigurationError) {
       return NextResponse.json({ error: error.message }, { status: 503 });
     }
-    if (isPaymentError(error)) {
-      return NextResponse.json(
-        {
-          error:
-            "差額のお支払いを完了できませんでした。お支払い方法をご確認のうえ、再度お試しください。",
-        },
-        { status: 402 },
-      );
-    }
     return apiError(error);
   }
-}
-
-// A failed immediate proration charge surfaces as a card error / HTTP 402.
-function isPaymentError(error: unknown) {
-  if (!error || typeof error !== "object") return false;
-  const e = error as { type?: string; statusCode?: number };
-  return e.type === "StripeCardError" || e.statusCode === 402;
 }
