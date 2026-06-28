@@ -47,7 +47,10 @@ export async function POST(request: NextRequest) {
 
     const updated = await stripe.subscriptions.update(subscription.id, {
       items: [{ id: item.id, price: priceId, quantity: 1 }],
-      proration_behavior: "create_prorations",
+      // Invoice the proration difference immediately and only switch the plan
+      // once that charge is paid; if it can't be paid, the update is rejected.
+      proration_behavior: "always_invoice",
+      payment_behavior: "error_if_incomplete",
       cancel_at_period_end: false,
       metadata: { ...subscription.metadata, userId: user.id, plan },
     });
@@ -57,6 +60,22 @@ export async function POST(request: NextRequest) {
     if (error instanceof StripeConfigurationError) {
       return NextResponse.json({ error: error.message }, { status: 503 });
     }
+    if (isPaymentError(error)) {
+      return NextResponse.json(
+        {
+          error:
+            "差額のお支払いを完了できませんでした。お支払い方法をご確認のうえ、再度お試しください。",
+        },
+        { status: 402 },
+      );
+    }
     return apiError(error);
   }
+}
+
+// A failed immediate proration charge surfaces as a card error / HTTP 402.
+function isPaymentError(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { type?: string; statusCode?: number };
+  return e.type === "StripeCardError" || e.statusCode === 402;
 }

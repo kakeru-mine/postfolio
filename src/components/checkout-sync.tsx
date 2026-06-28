@@ -23,7 +23,7 @@ export function CheckoutSync({ sessionId }: { sessionId: string }) {
           if (active) setError(result.error ?? "契約情報を同期できませんでした。");
           return;
         }
-        router.replace("/settings?checkout=success");
+        router.replace("/pricing?checkout=success");
         router.refresh();
       } catch {
         if (active) setError("契約情報を同期できませんでした。");

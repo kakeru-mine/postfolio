@@ -1,10 +1,11 @@
 import { Check } from "lucide-react";
 import { BillingActionButton } from "@/components/billing-action-button";
+import { CheckoutSync } from "@/components/checkout-sync";
 import { PageHeader } from "@/components/page-header";
 import { aiLimitLabel, planDefinitions } from "@/lib/plans";
 import { requirePageUser } from "@/lib/user";
 
-type SearchParams = Promise<{ checkout?: string }>;
+type SearchParams = Promise<{ checkout?: string; session_id?: string }>;
 
 export default async function PricingPage({
   searchParams,
@@ -24,6 +25,13 @@ export default async function PricingPage({
         title="プラン一覧"
         description="プランの確認と変更ができます。"
       />
+      {params.checkout === "success" && params.session_id ? (
+        <CheckoutSync sessionId={params.session_id} />
+      ) : params.checkout === "success" ? (
+        <p className="mt-6 rounded-xl bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
+          お申し込みを受け付けました。プランが反映されました。
+        </p>
+      ) : null}
       {params.checkout === "cancelled" ? (
         <p className="mt-6 rounded-xl bg-amber-50 p-4 text-sm font-bold text-amber-700">
           お申し込みはキャンセルされました。料金は発生していません。

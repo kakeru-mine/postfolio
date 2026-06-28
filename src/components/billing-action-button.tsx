@@ -167,7 +167,7 @@ function confirmationDescription(action: BillingAction) {
     return "以下の内容を確認後、Stripeの決済画面へ進みます。決済画面でも金額と支払方法をご確認ください。";
   }
   if (action === "change-plan") {
-    return "以下の内容でプランを変更します。変更後の請求や差額調整はStripe上の表示をご確認ください。";
+    return "以下の内容でプランを変更します。上位プランへの変更時は差額を即時に請求し、お支払い完了後すぐに新しいプランへ切り替わります。";
   }
   if (action === "cancel") {
     return "現在の有料プランを解約予約します。すぐに利用停止にはなりません。";
