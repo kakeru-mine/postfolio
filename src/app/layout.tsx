@@ -11,30 +11,36 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
 const ogTitle = "Postfolio | SNSリサーチボックス";
 const ogDescription =
   "SNSで見つけた良い投稿を、次の企画につなげるリサーチ資産へ。";
+// Two share-card designs; one is picked at random per request so shares vary
+// between the brand logo and the research-card mock.
+const OG_IMAGES = ["/og-image.png", "/og-mock.png"];
 
-export const metadata: Metadata = {
-  ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
-  title: ogTitle,
-  description: ogDescription,
-  icons: {
-    icon: "/postfolio-icon.png",
-    apple: "/postfolio-icon.png",
-  },
-  openGraph: {
-    type: "website",
-    siteName: "Postfolio",
+export function generateMetadata(): Metadata {
+  const ogImage = OG_IMAGES[Math.floor(Math.random() * OG_IMAGES.length)];
+  return {
+    ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
     title: ogTitle,
     description: ogDescription,
-    locale: "ja_JP",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Postfolio" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: ogTitle,
-    description: ogDescription,
-    images: ["/og-image.png"],
-  },
-};
+    icons: {
+      icon: "/postfolio-icon.png",
+      apple: "/postfolio-icon.png",
+    },
+    openGraph: {
+      type: "website",
+      siteName: "Postfolio",
+      title: ogTitle,
+      description: ogDescription,
+      locale: "ja_JP",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: "Postfolio" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle,
+      description: ogDescription,
+      images: [ogImage],
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
