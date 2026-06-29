@@ -265,21 +265,36 @@ function extractYouTubeVideoId(url: URL) {
 function extractYouTubeHtmlMetadata(html: string): PlatformMetadata {
   if (!html) return {};
 
+  // Use only sources tied to the main video. `shortBylineText` is avoided: it
+  // also appears on every recommended-video thumbnail, whose order changes per
+  // request, which made the author flip between re-fetches.
   const authorName = cleanAuthorName(
     decodeJsonString(
       html.match(/"ownerChannelName"\s*:\s*"([^"]+)"/)?.[1] ||
         html.match(
-          /"shortBylineText"\s*:\s*{[\s\S]{0,1200}?"text"\s*:\s*"([^"]+)"/,
+          /playerOverlayVideoDetailsRenderer"\s*:\s*{[\s\S]{0,800}?"subtitle"\s*:\s*{\s*"runs"\s*:\s*\[\s*{\s*"text"\s*:\s*"([^"]+)"/,
         )?.[1] ||
+        html.match(/"videoOwnerChannelName"\s*:\s*"([^"]+)"/)?.[1] ||
         html.match(
-          /"ownerText"\s*:\s*{[\s\S]{0,1200}?"text"\s*:\s*"([^"]+)"/,
+          /videoSecondaryInfoRenderer"\s*:\s*{[\s\S]{0,2000}?"ownerText"\s*:\s*{[\s\S]{0,400}?"text"\s*:\s*"([^"]+)"/,
         )?.[1],
     ),
   );
+  // The plain string `videoDetails.title` isn't always present in the HTML
+  // returned to bots; fall back to the renderer titles (kept as objects). The
+  // span after `"videoDetails"` is short so it can't skip ahead to an unrelated
+  // `"title":"…"` (which previously produced bogus titles like "16").
   const title = cleanMetadataValue(
     decodeJsonString(
-      html.match(/"videoDetails"\s*:\s*{[\s\S]{0,3000}?"title"\s*:\s*"([^"]+)"/)
-        ?.[1],
+      html.match(
+        /"videoDetails"\s*:\s*{[\s\S]{0,300}?"title"\s*:\s*"((?:[^"\\]|\\.)+)"/,
+      )?.[1] ||
+        html.match(
+          /playerOverlayVideoDetailsRenderer"\s*:\s*{[\s\S]{0,400}?"title"\s*:\s*{\s*"simpleText"\s*:\s*"((?:[^"\\]|\\.)+)"/,
+        )?.[1] ||
+        html.match(
+          /playerMicroformatRenderer"\s*:\s*{[\s\S]{0,2000}?"title"\s*:\s*{\s*"simpleText"\s*:\s*"((?:[^"\\]|\\.)+)"/,
+        )?.[1],
     ),
   );
   const thumbnailUrl = normalizeMetadataUrl(
