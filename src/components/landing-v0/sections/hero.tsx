@@ -111,6 +111,9 @@ export function Hero({ primaryHref }: { primaryHref: string }) {
                 </span>
               ))}
             </div>
+            <p className="mt-3 text-center text-[11px] text-white/75">
+              ※順次対応可能SNS追加予定
+            </p>
           </div>
         </div>
 
