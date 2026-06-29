@@ -11,36 +11,32 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
 const ogTitle = "Postfolio | SNSリサーチボックス";
 const ogDescription =
   "SNSで見つけた良い投稿を、次の企画につなげるリサーチ資産へ。";
-// Share-card variants (logo + tagline + a random combination of research
-// cards). One is picked at random per request so shares vary which cards show.
-const OG_IMAGES = Array.from({ length: 6 }, (_, i) => `/og-${i + 1}.png`);
-
-export function generateMetadata(): Metadata {
-  const ogImage = OG_IMAGES[Math.floor(Math.random() * OG_IMAGES.length)];
-  return {
-    ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
+// Default share card. The /welcome page picks a specific variant per share URL
+// (see its generateMetadata); a stable image is required because crawlers like X
+// re-fetch the page and a non-deterministic og:image breaks card generation.
+export const metadata: Metadata = {
+  ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
+  title: ogTitle,
+  description: ogDescription,
+  icons: {
+    icon: "/postfolio-icon.png",
+    apple: "/postfolio-icon.png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Postfolio",
     title: ogTitle,
     description: ogDescription,
-    icons: {
-      icon: "/postfolio-icon.png",
-      apple: "/postfolio-icon.png",
-    },
-    openGraph: {
-      type: "website",
-      siteName: "Postfolio",
-      title: ogTitle,
-      description: ogDescription,
-      locale: "ja_JP",
-      images: [{ url: ogImage, width: 1200, height: 630, alt: "Postfolio" }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: ogTitle,
-      description: ogDescription,
-      images: [ogImage],
-    },
-  };
-}
+    locale: "ja_JP",
+    images: [{ url: "/og-1.png", width: 1200, height: 630, alt: "Postfolio" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: ogTitle,
+    description: ogDescription,
+    images: ["/og-1.png"],
+  },
+};
 
 export default async function RootLayout({
   children,
