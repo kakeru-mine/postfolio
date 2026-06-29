@@ -73,8 +73,8 @@ for (let v = 1; v <= VARIANTS; v++) {
     cards += `
       <rect x="${x}" y="${y}" width="${cardW}" height="${cardH}" rx="18" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
       <rect x="${x + 16}" y="${y + imgPad + imgH + 16}" width="${badgeW}" height="26" rx="13" fill="#eef2ff"/>
-      <text x="${x + 16 + badgeW / 2}" y="${y + imgPad + imgH + 34}" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle" font-family="sans-serif">${esc(badge)}</text>
-      <text x="${x + 16}" y="${y + imgPad + imgH + 70}" font-size="21" font-weight="700" fill="#1f2937" font-family="sans-serif">${esc(trunc(picks[i].title, 13))}</text>`;
+      <text x="${x + 16 + badgeW / 2}" y="${y + imgPad + imgH + 34}" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle" font-family="Meiryo, sans-serif">${esc(badge)}</text>
+      <text x="${x + 16}" y="${y + imgPad + imgH + 70}" font-size="21" font-weight="700" fill="#1f2937" font-family="Meiryo, sans-serif">${esc(trunc(picks[i].title, 13))}</text>`;
 
     const mask = Buffer.from(
       `<svg width="${imgW}" height="${imgH}"><rect width="${imgW}" height="${imgH}" rx="12" ry="12"/></svg>`,
@@ -99,7 +99,7 @@ for (let v = 1; v <= VARIANTS; v++) {
       <rect width="${W}" height="${HEADER_H}" fill="url(#hg)"/>
       <rect x="${lockupX}" y="${plateY}" width="${plate}" height="${plate}" rx="28" fill="#ffffff"/>
       <text x="${lockupX + plate + lockupGap}" y="${plateY + plate / 2 + 38}" font-size="${wordmarkFont}" letter-spacing="${wordmarkSpacing}" font-weight="700" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif">${wordmark}</text>
-      <text x="${W / 2}" y="${H - 36}" font-size="26" font-weight="600" fill="#334155" text-anchor="middle" font-family="sans-serif">${esc(TAGLINE)}</text>
+      <text x="${W / 2}" y="${H - 36}" font-size="26" font-weight="600" fill="#334155" text-anchor="middle" font-family="Meiryo, sans-serif">${esc(TAGLINE)}</text>
       ${cards}
     </svg>`,
   );
