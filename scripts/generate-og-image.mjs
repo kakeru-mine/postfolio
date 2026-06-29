@@ -13,16 +13,15 @@ const HEADER_H = 188;
 const TAGLINE = "SNSで見つけた良い投稿を、次の企画につなげるリサーチ資産へ。";
 
 const allPosts = [
-  { img: "post-1.png", sns: "note", title: "夜の部屋で出会う、しゃべる鏡の話" },
-  { img: "post-3.png", sns: "Instagram", title: "映えるカフェメニューの撮り方メモ" },
-  { img: "post-6.png", sns: "TikTok", title: "1本目で離脱させないフックの作り方" },
-  { img: "post-2.png", sns: "X", title: "伸びた投稿に共通する書き出しパターン" },
-  { img: "post-4.png", sns: "YouTube", title: "旅Vlogのサムネ構成リファレンス" },
-  { img: "post-5.png", sns: "Substack", title: "ブランドの世界観をつくる配色設計" },
+  { img: "post-1.png", sns: "note", title: "夜の部屋のしゃべる鏡" },
+  { img: "post-3.png", sns: "Instagram", title: "映えるカフェメニュー" },
+  { img: "post-6.png", sns: "TikTok", title: "1本目で離脱させないフック" },
+  { img: "post-2.png", sns: "X", title: "伸びた投稿の書き出し" },
+  { img: "post-4.png", sns: "YouTube", title: "旅Vlogのサムネ構成" },
+  { img: "post-5.png", sns: "Substack", title: "ブランドの世界観をつくる" },
 ];
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const trunc = (s, n) => (s.length > n ? s.slice(0, n) + "…" : s);
 const shuffle = (arr) => {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -74,7 +73,7 @@ for (let v = 1; v <= VARIANTS; v++) {
       <rect x="${x}" y="${y}" width="${cardW}" height="${cardH}" rx="18" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
       <rect x="${x + 16}" y="${y + imgPad + imgH + 16}" width="${badgeW}" height="26" rx="13" fill="#eef2ff"/>
       <text x="${x + 16 + badgeW / 2}" y="${y + imgPad + imgH + 34}" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle" font-family="Meiryo, sans-serif">${esc(badge)}</text>
-      <text x="${x + 16}" y="${y + imgPad + imgH + 70}" font-size="21" font-weight="700" fill="#1f2937" font-family="Meiryo, sans-serif">${esc(trunc(picks[i].title, 13))}</text>`;
+      <text x="${x + 16}" y="${y + imgPad + imgH + 70}" font-size="21" font-weight="700" fill="#1f2937" font-family="Meiryo, sans-serif">${esc(picks[i].title)}</text>`;
 
     const mask = Buffer.from(
       `<svg width="${imgW}" height="${imgH}"><rect width="${imgW}" height="${imgH}" rx="12" ry="12"/></svg>`,
