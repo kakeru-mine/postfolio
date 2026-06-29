@@ -75,6 +75,9 @@ export function ShareButtons() {
             : "埋め込みコードをコピーしました。"}
         </p>
       ) : null}
+      <p className="mt-2 text-[11px] text-white/55">
+        ※順次対応可能SNS追加予定
+      </p>
     </div>
   );
 }
