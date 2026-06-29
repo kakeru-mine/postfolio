@@ -11,9 +11,9 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
 const ogTitle = "Postfolio | SNSリサーチボックス";
 const ogDescription =
   "SNSで見つけた良い投稿を、次の企画につなげるリサーチ資産へ。";
-// Two share-card designs; one is picked at random per request so shares vary
-// between the brand logo and the research-card mock.
-const OG_IMAGES = ["/og-image.png", "/og-mock.png"];
+// Share-card variants (logo + tagline + a random combination of research
+// cards). One is picked at random per request so shares vary which cards show.
+const OG_IMAGES = Array.from({ length: 6 }, (_, i) => `/og-${i + 1}.png`);
 
 export function generateMetadata(): Metadata {
   const ogImage = OG_IMAGES[Math.floor(Math.random() * OG_IMAGES.length)];
