@@ -1,4 +1,5 @@
 ﻿import { PostfolioLogo } from "@/components/landing-v0/postfolio-logo"
+import { ShareButtons } from "@/components/landing-v0/share-buttons"
 
 const groups = [
   {
@@ -46,6 +47,9 @@ export function SiteFooter() {
               <br />
               クリエイターのためのSNSリサーチボックス。
             </p>
+            <div className="mt-6">
+              <ShareButtons />
+            </div>
           </div>
           {groups.map((g) => (
             <div key={g.title}>

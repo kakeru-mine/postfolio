@@ -7,12 +7,32 @@ import "./globals.css";
 
 export const preferredRegion = "hnd1";
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
+const ogTitle = "Postfolio | SNSリサーチボックス";
+const ogDescription =
+  "SNSで見つけた良い投稿を、次の企画につなげるリサーチ資産へ。";
+
 export const metadata: Metadata = {
-  title: "Postfolio | SNSリサーチボックス",
-  description: "SNSで見つけた良い投稿を、次の企画につなげるリサーチ資産へ。",
+  ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
+  title: ogTitle,
+  description: ogDescription,
   icons: {
     icon: "/postfolio-icon.png",
     apple: "/postfolio-icon.png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Postfolio",
+    title: ogTitle,
+    description: ogDescription,
+    locale: "ja_JP",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Postfolio" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: ogTitle,
+    description: ogDescription,
+    images: ["/og-image.png"],
   },
 };
 
