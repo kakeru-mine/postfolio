@@ -56,6 +56,15 @@ const lockupX = Math.round((W - (plate + lockupGap + wordmarkW)) / 2);
 const plateY = Math.round((HEADER_H - plate) / 2);
 const icon = await sharp("public/postfolio-icon.png").resize({ width: iconSize }).toBuffer();
 
+// Main copy styled like the app's primary ("新規作成") button: an orange
+// gradient plate with the copy on top.
+const copyFont = 24;
+const copyPadX = 36;
+const copyW = Math.min(W - 80, Math.round(TAGLINE.length * copyFont * 0.92) + copyPadX * 2);
+const copyH = 58;
+const copyX = Math.round((W - copyW) / 2);
+const copyY = H - 22 - copyH;
+
 for (let v = 1; v <= VARIANTS; v++) {
   const picks = shuffle(allPosts).slice(0, cols);
   let cards = "";
@@ -93,12 +102,17 @@ for (let v = 1; v <= VARIANTS; v++) {
           <stop offset="0" stop-color="#172554"/>
           <stop offset="1" stop-color="#1e40af"/>
         </linearGradient>
+        <linearGradient id="btn" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#ff6b6b"/>
+          <stop offset="1" stop-color="#f59e0b"/>
+        </linearGradient>
       </defs>
       <rect width="${W}" height="${H}" fill="#eef2f7"/>
       <rect width="${W}" height="${HEADER_H}" fill="url(#hg)"/>
       <rect x="${lockupX}" y="${plateY}" width="${plate}" height="${plate}" rx="28" fill="#ffffff"/>
       <text x="${lockupX + plate + lockupGap}" y="${plateY + plate / 2 + 38}" font-size="${wordmarkFont}" letter-spacing="${wordmarkSpacing}" font-weight="700" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif">${wordmark}</text>
-      <text x="${W / 2}" y="${H - 36}" font-size="26" font-weight="600" fill="#334155" text-anchor="middle" font-family="Meiryo, sans-serif">${esc(TAGLINE)}</text>
+      <rect x="${copyX}" y="${copyY}" width="${copyW}" height="${copyH}" rx="16" fill="url(#btn)"/>
+      <text x="${W / 2}" y="${copyY + copyH / 2 + 8}" font-size="${copyFont}" font-weight="700" fill="#0f172a" text-anchor="middle" font-family="Meiryo, sans-serif">${esc(TAGLINE)}</text>
       ${cards}
     </svg>`,
   );
