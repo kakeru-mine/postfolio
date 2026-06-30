@@ -13,10 +13,33 @@ function formatDate(date: Date) {
   return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+// Turn bare http(s) URLs in the body into clickable links. The text itself is
+// rendered by React (escaped), so this stays XSS-safe.
+function renderBody(text: string) {
+  return text.split(/(https?:\/\/[^\s]+)/g).map((part, index) =>
+    /^https?:\/\//.test(part) ? (
+      <a
+        key={index}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="break-all text-[var(--primary)] underline underline-offset-2"
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    ),
+  );
+}
+
 export default async function AnnouncementsPage() {
   const user = await getOptionalCurrentUser();
   const isLoggedIn = Boolean(user);
-  const announcements = await listAnnouncementsForUser(user?.id ?? null);
+  const announcements = await listAnnouncementsForUser(
+    user?.id ?? null,
+    user?.createdAt ?? null,
+  );
   const hasUnread = announcements.some((announcement) => !announcement.read);
 
   return (
@@ -58,7 +81,7 @@ export default async function AnnouncementsPage() {
               </div>
               <h2 className="mt-1 text-lg font-bold">{announcement.title}</h2>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-600">
-                {announcement.body}
+                {renderBody(announcement.body)}
               </p>
               {isLoggedIn && !announcement.read ? (
                 <div className="mt-4">

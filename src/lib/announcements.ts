@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
 export type AnnouncementView = {
@@ -8,10 +9,22 @@ export type AnnouncementView = {
   read: boolean;
 };
 
-// Public list with per-user read state. Unread = no AnnouncementRead row for
-// this user. Anonymous visitors get every item marked as "read" (no buttons).
+// An announcement counts as "unread" only when it was published AFTER the user
+// registered. Anything from before they joined is treated as already seen, so a
+// brand-new account does not light up with the entire back catalogue.
+function unreadWhere(userId: string, since: Date | null) {
+  return {
+    published: true,
+    ...(since ? { publishedAt: { gt: since } } : {}),
+    reads: { none: { userId } },
+  };
+}
+
+// Public list with per-user read state. Anonymous visitors get every item marked
+// as "read" (no badges / buttons).
 export async function listAnnouncementsForUser(
   userId: string | null,
+  since: Date | null,
 ): Promise<AnnouncementView[]> {
   const announcements = await prisma.announcement.findMany({
     where: { published: true },
@@ -27,20 +40,33 @@ export async function listAnnouncementsForUser(
     },
   });
 
-  return announcements.map((announcement) => ({
-    id: announcement.id,
-    title: announcement.title,
-    body: announcement.body,
-    publishedAt: announcement.publishedAt,
-    read: userId ? (announcement.reads?.length ?? 0) > 0 : true,
-  }));
-}
-
-export async function countUnreadAnnouncements(userId: string): Promise<number> {
-  return prisma.announcement.count({
-    where: { published: true, reads: { none: { userId } } },
+  return announcements.map((announcement) => {
+    const hasReadRecord = (announcement.reads?.length ?? 0) > 0;
+    const publishedBeforeSignup = since
+      ? announcement.publishedAt <= since
+      : false;
+    return {
+      id: announcement.id,
+      title: announcement.title,
+      body: announcement.body,
+      publishedAt: announcement.publishedAt,
+      read: userId ? hasReadRecord || publishedBeforeSignup : true,
+    };
   });
 }
+
+// Cheaper than a COUNT: we only need to know whether at least one unread item
+// exists, so stop at the first match. Memoised per request.
+export const hasUnreadAnnouncements = cache(async function hasUnreadAnnouncements(
+  userId: string,
+  since: Date | null,
+): Promise<boolean> {
+  const first = await prisma.announcement.findFirst({
+    where: unreadWhere(userId, since),
+    select: { id: true },
+  });
+  return Boolean(first);
+});
 
 export async function markAnnouncementRead(userId: string, announcementId: string) {
   const announcement = await prisma.announcement.findUnique({
@@ -57,9 +83,9 @@ export async function markAnnouncementRead(userId: string, announcementId: strin
   return true;
 }
 
-export async function markAllAnnouncementsRead(userId: string) {
+export async function markAllAnnouncementsRead(userId: string, since: Date | null) {
   const unread = await prisma.announcement.findMany({
-    where: { published: true, reads: { none: { userId } } },
+    where: unreadWhere(userId, since),
     select: { id: true },
   });
   if (unread.length === 0) return;
@@ -97,6 +123,22 @@ export function updateAnnouncement(
   data: { title: string; body: string; published: boolean },
 ) {
   return prisma.announcement.update({ where: { id }, data });
+}
+
+// Re-notify: bump the publish date to now and clear every read record so the
+// announcement is unread again for all users (including those who joined after
+// its original date).
+export function republishAnnouncement(
+  id: string,
+  data: { title: string; body: string; published: boolean },
+) {
+  return prisma.$transaction([
+    prisma.announcement.update({
+      where: { id },
+      data: { ...data, publishedAt: new Date() },
+    }),
+    prisma.announcementRead.deleteMany({ where: { announcementId: id } }),
+  ]);
 }
 
 export function deleteAnnouncement(id: string) {

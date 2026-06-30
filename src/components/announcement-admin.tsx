@@ -27,6 +27,7 @@ export function AnnouncementAdmin({
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [published, setPublished] = useState(true);
+  const [resetReads, setResetReads] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,6 +36,7 @@ export function AnnouncementAdmin({
     setTitle("");
     setBody("");
     setPublished(true);
+    setResetReads(false);
     setError("");
   }
 
@@ -43,6 +45,7 @@ export function AnnouncementAdmin({
     setTitle(announcement.title);
     setBody(announcement.body);
     setPublished(announcement.published);
+    setResetReads(false);
     setError("");
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -64,7 +67,7 @@ export function AnnouncementAdmin({
         {
           method: editingId ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, body, published }),
+          body: JSON.stringify({ title, body, published, resetReads }),
         },
       );
       const data = await res.json();
@@ -133,6 +136,23 @@ export function AnnouncementAdmin({
             />
             公開する（オフにすると下書きとして保存）
           </label>
+
+          {editingId ? (
+            <label className="flex items-start gap-2 text-sm font-bold text-slate-600">
+              <input
+                type="checkbox"
+                checked={resetReads}
+                onChange={(event) => setResetReads(event.target.checked)}
+                className="mt-0.5 size-4"
+              />
+              <span>
+                未読に戻して再通知する
+                <span className="mt-0.5 block text-xs font-normal text-slate-400">
+                  全ユーザーの既読を解除し、公開日時を更新して再度未読バッジを表示します。
+                </span>
+              </span>
+            </label>
+          ) : null}
 
           {error ? (
             <p className="text-sm font-bold text-red-600">{error}</p>

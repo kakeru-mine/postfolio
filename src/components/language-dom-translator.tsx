@@ -260,6 +260,15 @@ const translations: Record<string, string> = {
   "④プラン": "4. Plans",
   "まず迷ったら": "If you are unsure",
   "使い方のコツ": "Usage Tip",
+  "お知らせ": "Announcements",
+  "Postfolioからの最新のお知らせを掲載します。":
+    "Here are the latest announcements from Postfolio.",
+  "すべて既読にする": "Mark all as read",
+  "既読にする": "Mark as read",
+  "未読": "Unread",
+  "処理中...": "Processing...",
+  "再試行": "Retry",
+  "現在お知らせはありません。": "There are no announcements at this time.",
 };
 
 const reverseTranslations = Object.fromEntries(

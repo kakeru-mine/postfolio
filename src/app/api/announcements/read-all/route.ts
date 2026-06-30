@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/user";
 export async function POST() {
   try {
     const user = await getCurrentUser();
-    await markAllAnnouncementsRead(user.id);
+    await markAllAnnouncementsRead(user.id, user.createdAt);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return apiError(error);
