@@ -94,34 +94,38 @@ export function ThemeSettings({ initialTheme }: { initialTheme: ThemeColors }) {
             label="背景色"
             value={theme.background}
             onChange={(value) => updateColor("background", value)}
+            className="order-3 lg:order-none"
           />
           <ColorField
             label="メインカラー"
             description="選択中のタブや見出し、グラデーションに使われます。"
             value={theme.main}
             onChange={(value) => updateColor("main", value)}
+            className="order-1 lg:order-none"
           />
           <ColorField
             label="アクセントカラー"
             description="「新規作成」や保存ボタンなど、主要な操作に使われます。"
             value={theme.accent}
             onChange={(value) => updateColor("accent", value)}
+            className="order-2 lg:order-none"
           />
           <ColorField
             label="サイドバー"
             value={theme.sidebar}
             onChange={(value) => updateColor("sidebar", value)}
+            className="order-4 lg:order-none"
           />
 
           {error ? (
-            <p className="col-span-2 text-sm font-bold text-red-600 lg:col-span-1">
+            <p className="order-5 col-span-2 text-sm font-bold text-red-600 lg:order-none lg:col-span-1">
               {error}
             </p>
           ) : null}
 
           <button
             type="button"
-            className="button-primary col-span-2 w-full lg:col-span-1"
+            className="button-primary order-6 col-span-2 w-full lg:order-none lg:col-span-1"
             disabled={status === "saving"}
             onClick={saveTheme}
           >
@@ -145,14 +149,16 @@ function ColorField({
   description,
   value,
   onChange,
+  className,
 }: {
   label: string;
   description?: string;
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }) {
   return (
-    <label className="block">
+    <label className={`block ${className ?? ""}`}>
       <span className="text-sm font-bold">{label}</span>
       {description ? (
         <span className="mt-1 block text-xs leading-5 text-slate-400">
