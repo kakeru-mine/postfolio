@@ -89,7 +89,7 @@ export function ThemeSettings({ initialTheme }: { initialTheme: ThemeColors }) {
       </div>
 
       <div className="mt-6 grid gap-6 border-t border-slate-100 pt-6 lg:grid-cols-[1fr_1.05fr]">
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-4 lg:grid-cols-1 lg:gap-4">
           <ColorField
             label="背景色"
             value={theme.background}
@@ -113,11 +113,15 @@ export function ThemeSettings({ initialTheme }: { initialTheme: ThemeColors }) {
             onChange={(value) => updateColor("sidebar", value)}
           />
 
-          {error ? <p className="text-sm font-bold text-red-600">{error}</p> : null}
+          {error ? (
+            <p className="col-span-2 text-sm font-bold text-red-600 lg:col-span-1">
+              {error}
+            </p>
+          ) : null}
 
           <button
             type="button"
-            className="button-primary w-full"
+            className="button-primary col-span-2 w-full lg:col-span-1"
             disabled={status === "saving"}
             onClick={saveTheme}
           >
@@ -155,12 +159,12 @@ function ColorField({
           {description}
         </span>
       ) : null}
-      <span className="mt-2 flex items-center gap-3">
+      <span className="mt-2 flex items-center gap-2 sm:gap-3">
         <input
           type="color"
           value={HEX_COLOR.test(value) ? value : "#000000"}
           onChange={(event) => onChange(event.target.value)}
-          className="h-11 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white p-1"
+          className="h-11 w-11 shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white p-1 sm:w-14"
           aria-label={`${label}を選択`}
         />
         <input
@@ -168,7 +172,7 @@ function ColorField({
           value={value}
           maxLength={7}
           onChange={(event) => onChange(event.target.value)}
-          className="field font-mono uppercase"
+          className="field min-w-0 flex-1 font-mono uppercase"
           aria-label={`${label}のカラーコード`}
         />
       </span>
