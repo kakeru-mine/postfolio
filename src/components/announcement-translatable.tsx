@@ -43,6 +43,8 @@ function renderBody(text: string) {
   );
 }
 
+// data-i18n-dynamic tells the dev-time translation audit to skip this content,
+// since it carries its own ja/en values rather than relying on the dictionary.
 export function TranslatableTitle({
   ja,
   en,
@@ -51,7 +53,7 @@ export function TranslatableTitle({
   en: string | null;
 }) {
   const language = useDocumentLanguage();
-  return <>{language === "en" && en ? en : ja}</>;
+  return <span data-i18n-dynamic>{language === "en" && en ? en : ja}</span>;
 }
 
 export function TranslatableBody({
@@ -62,5 +64,7 @@ export function TranslatableBody({
   en: string | null;
 }) {
   const language = useDocumentLanguage();
-  return <>{renderBody(language === "en" && en ? en : ja)}</>;
+  return (
+    <span data-i18n-dynamic>{renderBody(language === "en" && en ? en : ja)}</span>
+  );
 }

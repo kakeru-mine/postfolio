@@ -331,6 +331,50 @@ function translateDocument(language: AppLanguage) {
 
   translateTextNodes(root, dictionary);
   translateAttributes(root, dictionary);
+
+  if (process.env.NODE_ENV !== "production" && language === "en") {
+    auditUntranslated(root);
+  }
+}
+
+// Dev-only guardrail (see docs/I18N.md). When viewing English, flag any Japanese
+// text left in <main> that has no dictionary entry, so a missing translation is
+// caught immediately instead of silently shipping. Mark legitimately dynamic /
+// user-generated content with `data-i18n-dynamic` to exclude it.
+const auditedTexts = new Set<string>();
+function auditUntranslated(root: Element) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+      if (!parent) return NodeFilter.FILTER_REJECT;
+      if (["SCRIPT", "STYLE", "NOSCRIPT"].includes(parent.tagName)) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      if (parent.closest("[data-i18n-dynamic]")) return NodeFilter.FILTER_REJECT;
+      return node.nodeValue?.trim()
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT;
+    },
+  });
+
+  const missing: string[] = [];
+  while (walker.nextNode()) {
+    const text = (walker.currentNode.nodeValue ?? "").trim();
+    if (!text || auditedTexts.has(text)) continue;
+    if (!/[぀-ヿ㐀-鿿]/.test(text)) continue; // no Japanese
+    if (translations[text]) continue; // has an entry, would already be translated
+    auditedTexts.add(text);
+    missing.push(text);
+  }
+
+  if (missing.length) {
+    console.warn(
+      "[i18n] 英語モードで未翻訳の日本語が <main> に見つかりました。" +
+        "language-dom-translator.tsx に辞書エントリを追加するか、動的テキストは " +
+        "data-i18n-dynamic を付けて除外してください（docs/I18N.md 参照）:",
+      missing,
+    );
+  }
 }
 
 function translateTextNodes(root: Element, dictionary: Record<string, string>) {
