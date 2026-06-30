@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { AppShell } from "@/components/app-shell";
+import { isAdminEmail } from "@/lib/admin";
+import { countUnreadAnnouncements } from "@/lib/announcements";
 import { DEFAULT_THEME, getThemeCssVariables, normalizeTheme } from "@/lib/theme";
 import { getOptionalCurrentUser } from "@/lib/user";
 import "./globals.css";
@@ -51,6 +53,10 @@ export default async function RootLayout({
       })
     : DEFAULT_THEME;
   const themeVariables = getThemeCssVariables(theme) as CSSProperties;
+  const hasUnreadAnnouncements = user
+    ? (await countUnreadAnnouncements(user.id)) > 0
+    : false;
+  const isAdmin = isAdminEmail(user?.email);
 
   return (
     <html lang="ja" style={themeVariables}>
@@ -61,6 +67,8 @@ export default async function RootLayout({
               ? { name: user.name, email: user.email, avatarUrl: user.avatarUrl }
               : null
           }
+          hasUnreadAnnouncements={hasUnreadAnnouncements}
+          isAdmin={isAdmin}
         >
           {children}
         </AppShell>

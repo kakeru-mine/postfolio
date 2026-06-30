@@ -53,6 +53,7 @@ model User {
   aiUsageMonths           AiUsageMonth[]
   sessions                Session[]
   tokens                  UserToken[]
+  announcementReads       AnnouncementRead[]
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @updatedAt
 }
@@ -160,4 +161,29 @@ model AiUsageMonth {
 
   @@unique([userId, periodKey])
   @@index([periodKey])
+}
+
+model Announcement {
+  id          String             @id @default(cuid())
+  title       String
+  body        String
+  published   Boolean            @default(true)
+  publishedAt DateTime           @default(now())
+  reads       AnnouncementRead[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([published, publishedAt])
+}
+
+model AnnouncementRead {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  readAt         DateTime     @default(now())
+
+  @@unique([userId, announcementId])
+  @@index([userId])
 }

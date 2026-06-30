@@ -63,9 +63,13 @@ const labels = {
 export function AppShell({
   children,
   user,
+  hasUnreadAnnouncements = false,
+  isAdmin = false,
 }: {
   children: React.ReactNode;
   user: { name: string | null; email: string; avatarUrl: string | null } | null;
+  hasUnreadAnnouncements?: boolean;
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -189,10 +193,13 @@ export function AppShell({
               aria-label={menuOpen ? t.closeMenu : t.openMenu}
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
-              className="ml-auto grid size-11 place-items-center rounded-xl border border-white/15 bg-white/10 transition hover:bg-white/15 sm:hidden"
+              className="relative ml-auto grid size-11 place-items-center rounded-xl border border-white/15 bg-white/10 transition hover:bg-white/15 sm:hidden"
               onClick={() => setMenuOpen((open) => !open)}
             >
               {menuOpen ? <X size={24} /> : <Menu size={24} />}
+              {hasUnreadAnnouncements && !menuOpen ? (
+                <span className="absolute right-2 top-2 size-2.5 rounded-full bg-red-500 ring-2 ring-[var(--sidebar)]" />
+              ) : null}
             </button>
 
             <nav
@@ -214,9 +221,24 @@ export function AppShell({
                 className="order-3 w-full border-t border-white/10 pt-3 sm:hidden"
               >
                 <div className="flex flex-wrap gap-5 text-sm opacity-70">
-                  <Link href="/announcements" onClick={() => setMenuOpen(false)}>
+                  <Link
+                    href="/announcements"
+                    onClick={() => setMenuOpen(false)}
+                    className="inline-flex items-center gap-1.5"
+                  >
                     {t.news}
+                    {hasUnreadAnnouncements ? (
+                      <span className="size-2 rounded-full bg-red-500" />
+                    ) : null}
                   </Link>
+                  {isAdmin ? (
+                    <Link
+                      href="/admin/announcements"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {t.news}管理
+                    </Link>
+                  ) : null}
                   <LegalReturnLink href="/terms" onClick={() => setMenuOpen(false)}>
                     {t.terms}
                   </LegalReturnLink>
@@ -246,8 +268,22 @@ export function AppShell({
 
         <div className="hidden border-b border-slate-100 bg-white/90 px-5 py-2 text-sm text-slate-500 backdrop-blur sm:block sm:px-8 lg:px-10">
           <div className="mx-auto flex max-w-7xl items-center justify-end gap-5">
-            <Link href="/announcements" className="transition hover:text-[var(--primary)]">
+            {isAdmin ? (
+              <Link
+                href="/admin/announcements"
+                className="font-bold text-[var(--primary)] transition hover:opacity-80"
+              >
+                {t.news}管理
+              </Link>
+            ) : null}
+            <Link
+              href="/announcements"
+              className="inline-flex items-center gap-1.5 transition hover:text-[var(--primary)]"
+            >
               {t.news}
+              {hasUnreadAnnouncements ? (
+                <span className="size-2 rounded-full bg-red-500" />
+              ) : null}
             </Link>
             <LegalReturnLink href="/terms" className="transition hover:text-[var(--primary)]">
               {t.terms}
