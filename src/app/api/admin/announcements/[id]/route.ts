@@ -11,6 +11,10 @@ import { getCurrentUser } from "@/lib/user";
 
 type Context = { params: Promise<{ id: string }> };
 
+// Updating / re-notifying runs an OpenAI translation; allow headroom over the
+// platform default so it doesn't 504 mid-translation.
+export const maxDuration = 60;
+
 const announcementSchema = z.object({
   title: z.string().trim().min(1, "タイトルを入力してください。").max(120),
   body: z.string().trim().min(1, "本文を入力してください。").max(4000),

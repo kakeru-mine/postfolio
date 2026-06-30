@@ -17,6 +17,10 @@ import {
   UsageLimitError,
 } from "@/lib/usage";
 
+// The OpenAI analysis can take well over the platform default; allow up to 60s
+// so image-heavy posts don't 504 before analyzeSavedItem's own timeout.
+export const maxDuration = 60;
+
 const requestSchema = z.object({
   itemId: z.string().cuid(),
 });
