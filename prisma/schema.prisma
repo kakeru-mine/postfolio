@@ -167,6 +167,8 @@ model Announcement {
   id          String             @id @default(cuid())
   title       String
   body        String
+  titleEn     String?
+  bodyEn      String?
   published   Boolean            @default(true)
   publishedAt DateTime           @default(now())
   reads       AnnouncementRead[]

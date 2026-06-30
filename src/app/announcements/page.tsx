@@ -3,6 +3,10 @@ import {
   MarkAllReadButton,
   MarkReadButton,
 } from "@/components/announcement-read-controls";
+import {
+  TranslatableBody,
+  TranslatableTitle,
+} from "@/components/announcement-translatable";
 import { StandaloneLanguageControls } from "@/components/standalone-language-controls";
 import { listAnnouncementsForUser } from "@/lib/announcements";
 import { getOptionalCurrentUser } from "@/lib/user";
@@ -13,24 +17,12 @@ function formatDate(date: Date) {
   return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
-// Turn bare http(s) URLs in the body into clickable links. The text itself is
-// rendered by React (escaped), so this stays XSS-safe.
-function renderBody(text: string) {
-  return text.split(/(https?:\/\/[^\s]+)/g).map((part, index) =>
-    /^https?:\/\//.test(part) ? (
-      <a
-        key={index}
-        href={part}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="break-all text-[var(--primary)] underline underline-offset-2"
-      >
-        {part}
-      </a>
-    ) : (
-      part
-    ),
-  );
+function formatDateEn(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 export default async function AnnouncementsPage() {
@@ -71,7 +63,10 @@ export default async function AnnouncementsPage() {
             >
               <div className="flex flex-wrap items-center gap-2">
                 <time className="text-xs font-bold text-[var(--primary)]">
-                  {formatDate(announcement.publishedAt)}
+                  <TranslatableTitle
+                    ja={formatDate(announcement.publishedAt)}
+                    en={formatDateEn(announcement.publishedAt)}
+                  />
                 </time>
                 {isLoggedIn && !announcement.read ? (
                   <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-600">
@@ -79,9 +74,17 @@ export default async function AnnouncementsPage() {
                   </span>
                 ) : null}
               </div>
-              <h2 className="mt-1 text-lg font-bold">{announcement.title}</h2>
+              <h2 className="mt-1 text-lg font-bold">
+                <TranslatableTitle
+                  ja={announcement.title}
+                  en={announcement.titleEn}
+                />
+              </h2>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-600">
-                {renderBody(announcement.body)}
+                <TranslatableBody
+                  ja={announcement.body}
+                  en={announcement.bodyEn}
+                />
               </p>
               {isLoggedIn && !announcement.read ? (
                 <div className="mt-4">

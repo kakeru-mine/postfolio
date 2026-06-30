@@ -1,10 +1,13 @@
 import { cache } from "react";
+import { translateAnnouncementToEnglish } from "@/lib/announcement-translate";
 import { prisma } from "@/lib/prisma";
 
 export type AnnouncementView = {
   id: string;
   title: string;
   body: string;
+  titleEn: string | null;
+  bodyEn: string | null;
   publishedAt: Date;
   read: boolean;
 };
@@ -33,6 +36,8 @@ export async function listAnnouncementsForUser(
       id: true,
       title: true,
       body: true,
+      titleEn: true,
+      bodyEn: true,
       publishedAt: true,
       reads: userId
         ? { where: { userId }, select: { id: true }, take: 1 }
@@ -49,6 +54,8 @@ export async function listAnnouncementsForUser(
       id: announcement.id,
       title: announcement.title,
       body: announcement.body,
+      titleEn: announcement.titleEn,
+      bodyEn: announcement.bodyEn,
       publishedAt: announcement.publishedAt,
       read: userId ? hasReadRecord || publishedBeforeSignup : true,
     };
@@ -114,28 +121,38 @@ export function listAllAnnouncements() {
   });
 }
 
-export function createAnnouncement(data: { title: string; body: string; published: boolean }) {
-  return prisma.announcement.create({ data });
+export async function createAnnouncement(data: {
+  title: string;
+  body: string;
+  published: boolean;
+}) {
+  const translation = await translateAnnouncementToEnglish(data);
+  return prisma.announcement.create({ data: { ...data, ...translation } });
 }
 
-export function updateAnnouncement(
+export async function updateAnnouncement(
   id: string,
   data: { title: string; body: string; published: boolean },
 ) {
-  return prisma.announcement.update({ where: { id }, data });
+  const translation = await translateAnnouncementToEnglish(data);
+  return prisma.announcement.update({
+    where: { id },
+    data: { ...data, ...translation },
+  });
 }
 
 // Re-notify: bump the publish date to now and clear every read record so the
 // announcement is unread again for all users (including those who joined after
 // its original date).
-export function republishAnnouncement(
+export async function republishAnnouncement(
   id: string,
   data: { title: string; body: string; published: boolean },
 ) {
+  const translation = await translateAnnouncementToEnglish(data);
   return prisma.$transaction([
     prisma.announcement.update({
       where: { id },
-      data: { ...data, publishedAt: new Date() },
+      data: { ...data, ...translation, publishedAt: new Date() },
     }),
     prisma.announcementRead.deleteMany({ where: { announcementId: id } }),
   ]);
