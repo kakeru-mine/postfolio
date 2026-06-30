@@ -186,17 +186,24 @@ function ThemePreview({ theme }: { theme: ThemeColors }) {
     <div>
       <p className="mb-2 text-sm font-bold">プレビュー</p>
       <div
-        className="grid min-h-72 grid-cols-[105px_1fr] overflow-hidden rounded-2xl border border-slate-200 shadow-sm"
+        className="min-h-72 overflow-hidden rounded-2xl border border-slate-200 shadow-sm"
         style={variables}
       >
-        <div className="bg-[var(--sidebar)] p-4 text-[var(--sidebar-foreground)]">
+        <header
+          className="flex items-center gap-3 border-b border-white/10 px-4 py-3 text-[var(--sidebar-foreground)]"
+          style={{
+            background:
+              "linear-gradient(110deg, var(--sidebar), color-mix(in srgb, var(--primary-end) 32%, var(--sidebar)))",
+          }}
+        >
           <p className="text-sm font-bold">Postfolio</p>
-          <div className="mt-6 space-y-2 text-xs opacity-80">
-            <p className="rounded-lg bg-white/12 px-2 py-2">保存アイテム</p>
-            <p className="px-2 py-2">コレクション</p>
-            <p className="px-2 py-2">設定</p>
-          </div>
-        </div>
+          <nav className="ml-auto flex items-center gap-1 text-[11px] font-bold">
+            <span className="rounded-lg px-2 py-1 opacity-75">ホーム</span>
+            <span className="rounded-lg bg-white/15 px-2 py-1">保存アイテム</span>
+            <span className="rounded-lg px-2 py-1 opacity-75">コレクション</span>
+            <span className="rounded-lg px-2 py-1 opacity-75">設定</span>
+          </nav>
+        </header>
         <div className="bg-[var(--canvas)] p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
