@@ -27,6 +27,9 @@ export async function generateMetadata({
     typeof params.utm_source === "string" ? params.utm_source : "default";
   const ogImage = pickOgImage(source);
   return {
+    // The bare domain ("/") renders the same LP for signed-out visitors and is
+    // the canonical homepage; point /welcome there to consolidate ranking.
+    alternates: { canonical: "/" },
     openGraph: {
       images: [{ url: ogImage, width: 1200, height: 630, alt: "Postfolio" }],
     },

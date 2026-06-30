@@ -11,15 +11,21 @@ import {
 import Link from "next/link";
 import { AvatarUploader } from "@/components/avatar-uploader";
 import { ItemCard } from "@/components/item-card";
+import { LandingV0Page } from "@/components/landing-v0/landing-page";
 import { ManualHelpButton } from "@/components/manual-help-button";
 import { PageHeader } from "@/components/page-header";
 import { UsageMeter } from "@/components/usage-meter";
 import { prisma } from "@/lib/prisma";
 import { getUsageSummary } from "@/lib/usage";
-import { requirePageUser } from "@/lib/user";
+import { getOptionalCurrentUser } from "@/lib/user";
 
 export default async function Home() {
-  const user = await requirePageUser();
+  const user = await getOptionalCurrentUser();
+  // Signed-out visitors to the bare domain see the marketing LP (good for SEO
+  // and first impression) instead of being bounced to /login.
+  if (!user) {
+    return <LandingV0Page isLoggedIn={false} />;
+  }
   const [usage, recentItems] = await Promise.all([
     getUsageSummary(user),
     prisma.savedItem.findMany({

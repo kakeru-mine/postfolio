@@ -93,6 +93,9 @@ export function AppShell({
   }
 
   if (
+    // The root path renders the marketing LP for signed-out visitors, which
+    // brings its own header/footer — so it must not be wrapped in the app shell.
+    (pathname === "/" && !user) ||
     pathname === "/welcome" ||
     pathname === "/login" ||
     pathname === "/register" ||

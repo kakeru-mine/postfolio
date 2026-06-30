@@ -11,7 +11,7 @@ const routes: Array<{
   priority: number;
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
 }> = [
-  { path: "/welcome", priority: 1, changeFrequency: "weekly" },
+  { path: "/", priority: 1, changeFrequency: "weekly" },
   { path: "/announcements", priority: 0.6, changeFrequency: "weekly" },
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
