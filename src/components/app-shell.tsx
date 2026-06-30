@@ -29,6 +29,7 @@ const labels = {
     pricing: "プラン一覧",
     manual: "マニュアル",
     settings: "設定",
+    news: "お知らせ",
     terms: "利用規約",
     privacy: "プライバシー",
     contact: "お問い合わせ",
@@ -46,6 +47,7 @@ const labels = {
     pricing: "Plans",
     manual: "Manual",
     settings: "Settings",
+    news: "News",
     terms: "Terms",
     privacy: "Privacy",
     contact: "Contact",
@@ -88,6 +90,7 @@ export function AppShell({
     pathname === "/welcome" ||
     pathname === "/login" ||
     pathname === "/register" ||
+    pathname === "/announcements" ||
     pathname === "/terms" ||
     pathname === "/privacy" ||
     pathname === "/commercial-transactions" ||
@@ -211,6 +214,9 @@ export function AppShell({
                 className="order-3 w-full border-t border-white/10 pt-3 sm:hidden"
               >
                 <div className="flex flex-wrap gap-5 text-sm opacity-70">
+                  <Link href="/announcements" onClick={() => setMenuOpen(false)}>
+                    {t.news}
+                  </Link>
                   <LegalReturnLink href="/terms" onClick={() => setMenuOpen(false)}>
                     {t.terms}
                   </LegalReturnLink>
@@ -240,6 +246,9 @@ export function AppShell({
 
         <div className="hidden border-b border-slate-100 bg-white/90 px-5 py-2 text-sm text-slate-500 backdrop-blur sm:block sm:px-8 lg:px-10">
           <div className="mx-auto flex max-w-7xl items-center justify-end gap-5">
+            <Link href="/announcements" className="transition hover:text-[var(--primary)]">
+              {t.news}
+            </Link>
             <LegalReturnLink href="/terms" className="transition hover:text-[var(--primary)]">
               {t.terms}
             </LegalReturnLink>

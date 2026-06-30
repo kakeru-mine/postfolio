@@ -21,6 +21,7 @@ const groups = [
   {
     title: "規約",
     links: [
+      { label: "お知らせ", href: "/announcements" },
       { label: "利用規約", href: "/terms" },
       { label: "プライバシー", href: "/privacy" },
     ],
