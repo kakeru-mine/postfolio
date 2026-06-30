@@ -3,6 +3,22 @@
 import { useEffect } from "react";
 import type { AppLanguage } from "@/components/language-switcher";
 
+// ⚠️ TRANSLATION RULE (read before adding/changing UI text)
+// English mode is a DOM-translation layer: it walks the text nodes inside <main>
+// and swaps any node whose *entire trimmed text* exactly matches a key below.
+// Consequences any contributor must keep in mind:
+//   1. New Japanese UI text in a page/component stays Japanese in English mode
+//      until you add an exact-match entry here. ALWAYS update this dictionary in
+//      the same change that introduces the text.
+//   2. The key must match the rendered text character-for-character. A different
+//      particle (に vs へ), trailing punctuation, or a reworded label silently
+//      breaks the match. When you reword Japanese text, update the key too.
+//   3. The matcher only sees text nodes inside <main>; header/footer chrome is
+//      translated via the app-shell `labels` map instead.
+//   4. Dynamic/user-generated text (DB content, dates) cannot be translated here.
+//      Render it through a client component that takes ja/en props (see
+//      announcement-translatable.tsx) and provide the English value at the source.
+// See docs/I18N.md for the full policy and the planned next-intl migration.
 const translations: Record<string, string> = {
   "ホーム": "Home",
   "保存アイテム": "Saved Items",
@@ -269,6 +285,7 @@ const translations: Record<string, string> = {
   "処理中...": "Processing...",
   "再試行": "Retry",
   "現在お知らせはありません。": "There are no announcements at this time.",
+  "ページネーション": "Pagination",
 };
 
 const reverseTranslations = Object.fromEntries(

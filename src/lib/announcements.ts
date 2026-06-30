@@ -23,29 +23,38 @@ function unreadWhere(userId: string, since: Date | null) {
   };
 }
 
-// Public list with per-user read state. Anonymous visitors get every item marked
-// as "read" (no badges / buttons).
+export const ANNOUNCEMENTS_PAGE_SIZE = 20;
+
+// Public list with per-user read state, paginated (newest first). Anonymous
+// visitors get every item marked as "read" (no badges / buttons).
 export async function listAnnouncementsForUser(
   userId: string | null,
   since: Date | null,
-): Promise<AnnouncementView[]> {
-  const announcements = await prisma.announcement.findMany({
-    where: { published: true },
-    orderBy: { publishedAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      body: true,
-      titleEn: true,
-      bodyEn: true,
-      publishedAt: true,
-      reads: userId
-        ? { where: { userId }, select: { id: true }, take: 1 }
-        : false,
-    },
-  });
+  page = 1,
+  pageSize = ANNOUNCEMENTS_PAGE_SIZE,
+): Promise<{ items: AnnouncementView[]; total: number }> {
+  const [total, announcements] = await Promise.all([
+    prisma.announcement.count({ where: { published: true } }),
+    prisma.announcement.findMany({
+      where: { published: true },
+      orderBy: { publishedAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        titleEn: true,
+        bodyEn: true,
+        publishedAt: true,
+        reads: userId
+          ? { where: { userId }, select: { id: true }, take: 1 }
+          : false,
+      },
+    }),
+  ]);
 
-  return announcements.map((announcement) => {
+  const items = announcements.map((announcement) => {
     const hasReadRecord = (announcement.reads?.length ?? 0) > 0;
     const publishedBeforeSignup = since
       ? announcement.publishedAt <= since
@@ -60,6 +69,8 @@ export async function listAnnouncementsForUser(
       read: userId ? hasReadRecord || publishedBeforeSignup : true,
     };
   });
+
+  return { items, total };
 }
 
 // Cheaper than a COUNT: we only need to know whether at least one unread item

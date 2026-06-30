@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BackToPreviousButton } from "@/components/back-to-previous-button";
 import {
   MarkAllReadButton,
@@ -8,7 +9,11 @@ import {
   TranslatableTitle,
 } from "@/components/announcement-translatable";
 import { StandaloneLanguageControls } from "@/components/standalone-language-controls";
-import { listAnnouncementsForUser } from "@/lib/announcements";
+import {
+  ANNOUNCEMENTS_PAGE_SIZE,
+  hasUnreadAnnouncements,
+  listAnnouncementsForUser,
+} from "@/lib/announcements";
 import { getOptionalCurrentUser } from "@/lib/user";
 
 export const dynamic = "force-dynamic";
@@ -25,14 +30,27 @@ function formatDateEn(date: Date) {
   });
 }
 
-export default async function AnnouncementsPage() {
+export default async function AnnouncementsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const user = await getOptionalCurrentUser();
   const isLoggedIn = Boolean(user);
-  const announcements = await listAnnouncementsForUser(
+  const { page: pageParam } = await searchParams;
+
+  const requestedPage = Math.max(1, Number(pageParam) || 1);
+  const { items: announcements, total } = await listAnnouncementsForUser(
     user?.id ?? null,
     user?.createdAt ?? null,
+    requestedPage,
   );
-  const hasUnread = announcements.some((announcement) => !announcement.read);
+  const totalPages = Math.max(1, Math.ceil(total / ANNOUNCEMENTS_PAGE_SIZE));
+  const page = Math.min(requestedPage, totalPages);
+  // The "mark all" button reflects unread across every page, not just this one.
+  const hasUnread = user
+    ? await hasUnreadAnnouncements(user.id, user.createdAt)
+    : false;
 
   return (
     <main className="mx-auto max-w-4xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
@@ -99,6 +117,44 @@ export default async function AnnouncementsPage() {
           </div>
         )}
       </div>
+
+      {totalPages > 1 ? (
+        <nav
+          className="mt-8 flex items-center justify-center gap-4 text-sm"
+          aria-label="ページネーション"
+        >
+          {page > 1 ? (
+            <Link
+              href={`/announcements?page=${page - 1}`}
+              className="button-secondary px-3 py-1.5"
+            >
+              <TranslatableTitle ja="前へ" en="Previous" />
+            </Link>
+          ) : (
+            <span className="px-3 py-1.5 text-slate-300">
+              <TranslatableTitle ja="前へ" en="Previous" />
+            </span>
+          )}
+          <span className="font-bold text-slate-500">
+            <TranslatableTitle
+              ja={`${page} / ${totalPages} ページ`}
+              en={`Page ${page} of ${totalPages}`}
+            />
+          </span>
+          {page < totalPages ? (
+            <Link
+              href={`/announcements?page=${page + 1}`}
+              className="button-secondary px-3 py-1.5"
+            >
+              <TranslatableTitle ja="次へ" en="Next" />
+            </Link>
+          ) : (
+            <span className="px-3 py-1.5 text-slate-300">
+              <TranslatableTitle ja="次へ" en="Next" />
+            </span>
+          )}
+        </nav>
+      ) : null}
     </main>
   );
 }

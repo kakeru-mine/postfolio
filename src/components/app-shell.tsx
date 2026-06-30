@@ -39,6 +39,7 @@ const labels = {
     closeMenu: "メニューを閉じる",
     mainMenu: "メインメニュー",
     mobileMenu: "スマートフォンメニュー",
+    unread: "未読のお知らせがあります",
   },
   en: {
     home: "Home",
@@ -57,6 +58,7 @@ const labels = {
     closeMenu: "Close menu",
     mainMenu: "Main menu",
     mobileMenu: "Mobile menu",
+    unread: "You have unread announcements",
   },
 } as const;
 
@@ -198,7 +200,11 @@ export function AppShell({
             >
               {menuOpen ? <X size={24} /> : <Menu size={24} />}
               {hasUnreadAnnouncements && !menuOpen ? (
-                <span className="absolute right-2 top-2 size-2.5 rounded-full bg-red-500 ring-2 ring-[var(--sidebar)]" />
+                <span
+                  role="img"
+                  aria-label={t.unread}
+                  className="absolute right-2 top-2 size-2.5 rounded-full bg-red-500 ring-2 ring-[var(--sidebar)]"
+                />
               ) : null}
             </button>
 
@@ -228,7 +234,11 @@ export function AppShell({
                   >
                     {t.news}
                     {hasUnreadAnnouncements ? (
-                      <span className="size-2 rounded-full bg-red-500" />
+                      <span
+                        role="img"
+                        aria-label={t.unread}
+                        className="size-2 rounded-full bg-red-500"
+                      />
                     ) : null}
                   </Link>
                   {isAdmin ? (
@@ -282,7 +292,11 @@ export function AppShell({
             >
               {t.news}
               {hasUnreadAnnouncements ? (
-                <span className="size-2 rounded-full bg-red-500" />
+                <span
+                  role="img"
+                  aria-label={t.unread}
+                  className="size-2 rounded-full bg-red-500"
+                />
               ) : null}
             </Link>
             <LegalReturnLink href="/terms" className="transition hover:text-[var(--primary)]">
