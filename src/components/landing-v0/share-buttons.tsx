@@ -9,7 +9,7 @@ const SHARE_TEXT =
 function baseUrl() {
   return (
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ||
-    "https://postfolio-sigma.vercel.app"
+    "https://postfolioapp.com"
   );
 }
 
