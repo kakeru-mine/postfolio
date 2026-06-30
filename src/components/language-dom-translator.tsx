@@ -16,7 +16,7 @@ const translations: Record<string, string> = {
   "特定商取引法に基づく表記": "Legal Notice Based on the Specified Commercial Transactions Act",
   "プライバシーポリシー": "Privacy Policy",
   "お問い合わせ": "Contact",
-  "Postfolioへ戻る": "Back to Postfolio",
+  "Postfolioに戻る": "Back to Postfolio",
   "最終更新日：2026年6月13日": "Last updated: June 13, 2026",
   "最終更新日：2026年6月20日": "Last updated: June 20, 2026",
   "販売事業者": "Seller",
