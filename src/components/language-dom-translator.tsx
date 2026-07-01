@@ -33,6 +33,7 @@ const translations: Record<string, string> = {
   "プライバシーポリシー": "Privacy Policy",
   "お問い合わせ": "Contact",
   "Postfolioに戻る": "Back to Postfolio",
+  "利用規約へ戻る": "Back to Terms",
   "最終更新日：2026年6月13日": "Last updated: June 13, 2026",
   "最終更新日：2026年6月20日": "Last updated: June 20, 2026",
   "販売事業者": "Seller",
