@@ -286,6 +286,67 @@ const translations: Record<string, string> = {
   "再試行": "Retry",
   "現在お知らせはありません。": "There are no announcements at this time.",
   "ページネーション": "Pagination",
+  // --- Legal pages (terms / privacy) ---
+  "最終更新日：": "Last updated: ",
+  "2026年6月20日": "June 20, 2026",
+  "が提供するSNSリサーチサービス「Postfolio」の利用条件を定めるものです。": ".",
+  "4. プランと利用制限": "4. Plans and Usage Limits",
+  "各プランには保存中アイテム数とAI分析回数の上限があります。保存操作の累計回数には制限を設けませんが、保存中アイテム数が上限に達している場合、新たな保存ができないことがあります。":
+    "Each plan has limits on the number of saved items and AI analyses. There is no cumulative limit on save operations, but new saves may be unavailable when the number of saved items reaches the limit.",
+  "有料プランは月額制です。決済、請求、プラン変更、解約などの手続きにはStripeのサービスを利用します。解約後も契約期間の終了日までは有料プランの機能を利用できます。":
+    "Paid plans are billed monthly. Payments, billing, plan changes, and cancellations are handled through Stripe. After cancellation, paid features remain available until the end of the current contract period.",
+  "デジタルサービスの性質上、利用者都合による返金や日割り返金は原則として行いません。ただし、法令上必要な場合、重複決済、運営者の責めに帰すべき事情がある場合は個別に確認のうえ対応します。":
+    "Due to the nature of digital services, refunds or prorated refunds for customer convenience are not provided in principle. However, where required by law, or in cases of duplicate payment or circumstances attributable to the operator, we will review and respond individually.",
+  "利用者は、所定の手続きによりアカウントを削除できます。アカウント削除後、保存投稿、コレクション、タグ、AI分析結果、設定情報などは削除され、元に戻すことはできません。有料プラン契約中の場合、契約期間終了後に削除可能となる場合があります。":
+    "Users may delete their account through the prescribed procedure. After deletion, saved posts, collections, tags, AI analysis results, and settings are deleted and cannot be restored. If a paid plan is active, deletion may only become possible after the contract period ends.",
+  "利用者は、保存するURL、メモ、画像その他の情報について必要な権利または利用権限を有するものとします。第三者の著作権、肖像権、プライバシー、各SNSの規約その他の権利を侵害しない範囲で利用してください。":
+    "Users must hold the necessary rights or authorization for the URLs, notes, images, and other information they save. Please use the service without infringing the copyrights, portrait rights, privacy, SNS terms, or other rights of third parties.",
+  "サービス提供、保存投稿の検索・AI分析、利用上限の管理、契約・課金管理、不正利用防止、障害調査、品質改善、お問い合わせ対応、自動返信、重要なお知らせや会員登録完了通知の送信のために利用します。":
+    "We use it to provide the service, search and AI-analyze saved posts, manage usage limits, manage contracts and billing, prevent misuse, investigate incidents, improve quality, respond to inquiries, send auto-replies, and send important notices and registration-completion notifications.",
+  "4. お問い合わせフォーム": "4. Contact Form",
+  "お問い合わせフォームを送信した場合、入力内容および任意で添付された画像を、内容確認、返信、送信者への自動返信のために利用します。メール送信にはResendを利用する場合があります。":
+    "When you submit the contact form, we use the entered content and any optionally attached images to review the content, reply, and send an auto-reply to the sender. We may use Resend to send emails.",
+  "OpenAI、Stripe、Resend、URL情報取得対象となる外部サイトへ、機能提供に必要な範囲で情報を送信します。これらの送信先には、日本国外に所在する事業者が含まれる場合があります。各事業者の取り扱いは、それぞれの規約・ポリシーに従います。":
+    "We send information to OpenAI, Stripe, Resend, and the external sites whose URL data is fetched, to the extent necessary to provide features. These recipients may include businesses located outside Japan. Each provider handles data in accordance with its own terms and policies.",
+  "9. 保存期間とアカウント削除時の扱い":
+    "9. Retention Period and Handling upon Account Deletion",
+  "利用目的に必要な期間、情報を保存します。アカウント削除後、保存投稿、メモ、タグ、コレクション、AI分析結果、設定情報などは削除されます。ただし、契約・請求、不正対策、障害調査、法令対応に必要な情報は、必要な期間保持する場合があります。":
+    "We retain information for as long as necessary for the purposes of use. After account deletion, saved posts, notes, tags, collections, AI analysis results, and settings are deleted. However, information necessary for contracts and billing, fraud prevention, incident investigation, and legal compliance may be retained for the necessary period.",
+  // --- Contact page + form ---
+  "Postfolioに関するご質問、不具合報告、ご要望などはこちらからご連絡ください。":
+    "For questions, bug reports, or requests about Postfolio, please contact us here.",
+  "お問い合わせフォーム": "Contact Form",
+  "は必須項目です。": "is a required field.",
+  "お名前": "Name",
+  "返信先メールアドレス": "Reply-to email address",
+  "件名": "Subject",
+  "お問い合わせ内容": "Message",
+  "画像添付": "Attach images",
+  "画像を選択": "Select images",
+  "添付可能: jpg、jpeg、png、webp、gif、heic、heif":
+    "Allowed: jpg, jpeg, png, webp, gif, heic, heif",
+  "ファイル選択": "Choose file",
+  "画像は3枚まで添付できます。添付画像は1枚5MBまで、合計10MBまで送信できます。":
+    "You can attach up to 3 images. Each image can be up to 5MB, with a total of up to 10MB.",
+  "送信する": "Send",
+  "●ご連絡時には、こちらの情報を載せて頂けると幸いです":
+    "● Please include the following information when you contact us",
+  "発生した画面や操作内容": "The screen where it happened and what you were doing",
+  "保存しようとしたSNSの種類": "The type of SNS you were trying to save",
+  "表示されたエラーメッセージ": "The error message shown",
+  "可能であればスクリーンショット": "A screenshot, if possible",
+  "例：山田 太郎": "e.g. Taro Yamada",
+  "例：your@example.com": "e.g. your@example.com",
+  "例：不具合について": "e.g. About a bug",
+  "お問い合わせ内容を入力してください": "Enter your inquiry",
+  "選択中の画像を解除": "Clear selected images",
+  "選択中の画像": "Selected images",
+  "送信中...": "Sending...",
+  "画像は3枚まで添付できます。": "You can attach up to 3 images.",
+  "送信に失敗しました。": "Failed to send.",
+  "お問い合わせを送信しました。": "Your inquiry has been sent.",
+  "送信に失敗しました。しばらくしてから再度お試しください。":
+    "Failed to send. Please try again later.",
 };
 
 const reverseTranslations = Object.fromEntries(
