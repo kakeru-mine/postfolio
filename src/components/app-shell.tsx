@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -13,11 +13,6 @@ import {
   Settings,
   X,
 } from "lucide-react";
-import {
-  LanguageSwitcher,
-  type AppLanguage,
-} from "@/components/language-switcher";
-import { LanguageDomTranslator } from "@/components/language-dom-translator";
 import { LegalReturnLink } from "@/components/legal-return-link";
 import { LogoutButton } from "@/components/logout-button";
 
@@ -75,22 +70,10 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [language, setLanguage] = useState<AppLanguage>("ja");
-  const t = labels[language];
-
-  useEffect(() => {
-    const savedLanguage = window.localStorage.getItem("postfolio-language");
-    if (savedLanguage === "ja" || savedLanguage === "en") {
-      setLanguage(savedLanguage);
-      document.documentElement.lang = savedLanguage;
-    }
-  }, []);
-
-  function changeLanguage(nextLanguage: AppLanguage) {
-    setLanguage(nextLanguage);
-    window.localStorage.setItem("postfolio-language", nextLanguage);
-    document.documentElement.lang = nextLanguage;
-  }
+  // The authenticated app is Japanese-only. English is offered on public pages
+  // (LP, legal, announcements, contact) via their own language controls, so the
+  // app shell no longer exposes a language switcher or DOM translation.
+  const t = labels.ja;
 
   if (
     // The root path renders the marketing LP for signed-out visitors, which
@@ -189,10 +172,6 @@ export function AppShell({
               </span>
             </Link>
 
-            <div className="sm:hidden">
-              <LanguageSwitcher language={language} onChange={changeLanguage} />
-            </div>
-
             <button
               type="button"
               aria-label={menuOpen ? t.closeMenu : t.openMenu}
@@ -219,10 +198,6 @@ export function AppShell({
                 <NavLink key={item.href} {...item} />
               ))}
             </nav>
-
-            <div className="order-2 ml-auto hidden sm:block">
-              <LanguageSwitcher language={language} onChange={changeLanguage} />
-            </div>
 
             {menuOpen ? (
               <div
@@ -318,10 +293,7 @@ export function AppShell({
         </div>
       </div>
 
-      <main className="min-w-0 pb-24 sm:pb-0">
-        <LanguageDomTranslator language={language} />
-        {children}
-      </main>
+      <main className="min-w-0 pb-24 sm:pb-0">{children}</main>
       <nav
         aria-label={t.mobileMenu}
         className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-white/10 px-1.5 py-2 text-[var(--sidebar-foreground)] shadow-[0_-12px_30px_rgba(15,23,42,0.22)] backdrop-blur sm:hidden"
