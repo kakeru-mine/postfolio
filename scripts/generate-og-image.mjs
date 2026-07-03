@@ -35,10 +35,10 @@ const gap = 30;
 const cols = 3;
 const cardW = Math.floor((W - margin * 2 - gap * (cols - 1)) / cols);
 const cardTop = HEADER_H + 28;
-const cardH = 288;
+const cardH = 258;
 const imgPad = 12;
 const imgW = cardW - imgPad * 2;
-const imgH = 178;
+const imgH = 168;
 
 // Large logo lockup that fills most of the blue header: white plate with the
 // book icon + a wide wordmark (letter-spacing spreads it across the width).
@@ -59,10 +59,12 @@ const icon = await sharp("public/postfolio-icon.png").resize({ width: iconSize }
 // lines and anchored to the bottom-right so it clears the title pill that X
 // overlays at the bottom-left of the card image.
 const copyLines = ["SNSで見つけた良い投稿を、", "次の企画につなげるリサーチ資産へ。"];
-const copyFont = 24;
-const copyLineH = 34;
-const copyPadX = 30;
-const copyPadY = 16;
+const copyFont = 30;
+const copyLineH = 44;
+const copyPadX = 38;
+const copyPadY = 20;
+// A heavier, more assertive gothic than Meiryo for stronger presence.
+const copyFontFamily = "'Yu Gothic UI', 'Yu Gothic', 'BIZ UDPGothic', Meiryo, sans-serif";
 const copyLongest = copyLines.reduce((a, b) => (a.length >= b.length ? a : b));
 const copyW = Math.round(copyLongest.length * copyFont * 0.92) + copyPadX * 2;
 const copyH = copyPadY * 2 + copyLineH * copyLines.length;
@@ -120,7 +122,7 @@ for (let v = 1; v <= VARIANTS; v++) {
       ${copyLines
         .map(
           (line, i) =>
-            `<text x="${copyCenterX}" y="${copyY + copyPadY + copyLineH * i + 25}" font-size="${copyFont}" font-weight="700" fill="#0f172a" text-anchor="middle" font-family="Meiryo, sans-serif">${esc(line)}</text>`,
+            `<text x="${copyCenterX}" y="${copyY + copyPadY + copyLineH * i + 33}" font-size="${copyFont}" font-weight="900" fill="#0f172a" stroke="#0f172a" stroke-width="0.6" text-anchor="middle" font-family="${copyFontFamily}">${esc(line)}</text>`,
         )
         .join("")}
       ${cards}
