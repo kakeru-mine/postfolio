@@ -35,7 +35,18 @@ export async function POST(request: NextRequest) {
     `;
     const user = users[0];
 
-    if (user?.lockedUntil && user.lockedUntil > new Date()) {
+    if (!user) {
+      return NextResponse.json(
+        {
+          error:
+            "このメールアドレスは登録されていません。会員登録がお済みでない場合は、新規登録してください。",
+          code: "NOT_REGISTERED",
+        },
+        { status: 401 },
+      );
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
       const minutes = Math.ceil(
         (user.lockedUntil.getTime() - Date.now()) / 60_000,
       );
@@ -48,13 +59,11 @@ export async function POST(request: NextRequest) {
     }
 
     const valid =
-      user?.passwordHash &&
+      user.passwordHash &&
       (await verifyPassword(input.password, user.passwordHash));
 
-    if (!user || !valid) {
-      if (user) {
-        await registerFailedLogin(user.id, user.failedLoginAttempts);
-      }
+    if (!valid) {
+      await registerFailedLogin(user.id, user.failedLoginAttempts);
       return NextResponse.json(
         { error: "メールアドレスまたはパスワードが正しくありません。" },
         { status: 401 },
