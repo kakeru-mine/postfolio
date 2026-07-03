@@ -40,8 +40,8 @@ const imgPad = 12;
 const imgW = cardW - imgPad * 2;
 const imgH = 178;
 
-// Logo lockup, centered: white plate with the book icon (unchanged size) + the
-// supplied wordmark image. The main copy sits directly below.
+// Logo lockup: white plate with the book icon (unchanged size) + the supplied
+// wordmark image at its natural width, centered as a unit above the copy.
 const plate = 124;
 const iconSize = 92;
 const lockupGap = 28;
@@ -53,8 +53,8 @@ const icon = await sharp("public/postfolio-icon.png").resize({ width: iconSize }
 const wordmarkH = 92;
 const wmAlpha = await sharp("public/postfolio-wordmark.png")
   .greyscale()
-  .negate() // navy lettering -> bright, white bg -> dark
-  .linear(1.8, 0) // push the lettering fully opaque, keep the background transparent
+  .negate()
+  .linear(1.8, 0)
   .raw()
   .toBuffer({ resolveWithObject: true });
 const wordmarkWhite = await sharp({
@@ -75,8 +75,9 @@ const wordmark = await sharp(wordmarkWhite)
   .resize({ height: wordmarkH })
   .png()
   .toBuffer();
-const wordmarkImgW = (await sharp(wordmark).metadata()).width;
 
+// Centre the whole lockup (icon + wordmark) horizontally.
+const wordmarkImgW = (await sharp(wordmark).metadata()).width;
 const lockupW = plate + lockupGap + wordmarkImgW;
 const plateX = Math.round((W - lockupW) / 2);
 const wordmarkImgX = plateX + plate + lockupGap;
