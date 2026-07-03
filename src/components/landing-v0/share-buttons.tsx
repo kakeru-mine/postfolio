@@ -13,9 +13,15 @@ function baseUrl() {
   );
 }
 
+// Bump `ogv` alongside the og-*.png design (and OG_VERSION in welcome/page.tsx)
+// so X treats the shared URL as new and re-scrapes the refreshed card art.
+const OG_SHARE_VERSION = "2";
+
 function lpUrl(source?: string) {
   const base = `${baseUrl()}/welcome`;
-  return source ? `${base}?utm_source=${source}&utm_medium=share` : base;
+  return source
+    ? `${base}?utm_source=${source}&utm_medium=share&ogv=${OG_SHARE_VERSION}`
+    : `${base}?ogv=${OG_SHARE_VERSION}`;
 }
 
 export function ShareButtons() {
