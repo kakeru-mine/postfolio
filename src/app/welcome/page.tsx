@@ -5,7 +5,7 @@ import { getOptionalCurrentUser } from "@/lib/user";
 const OG_VARIANTS = 6;
 // Bump when the og-*.png designs change so crawlers (esp. X, which caches images
 // by URL) fetch the new artwork instead of a stale cached copy.
-const OG_VERSION = "4";
+const OG_VERSION = "8";
 
 // Deterministic pick so the same share URL always resolves to the same card
 // (crawlers re-fetch the page; a stable og:image is required for X to build the

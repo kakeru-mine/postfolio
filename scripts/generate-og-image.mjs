@@ -1,6 +1,6 @@
-// Generates OGP / Twitter Card images (1200x630): a compact app-style blue
-// header (logo) above a row of research cards, with the main copy along the
-// bottom. Several variants are produced (og-1.png .. og-N.png), each with a
+// Generates OGP / Twitter Card images (1200x630): a blue header with the logo
+// (icon + gothic wordmark) and the main copy in white directly beneath it, above
+// a row of research cards. Several variants are produced (og-1.png .. og-N.png), each with a
 // random combination of cards, so shares vary which cards appear. One variant
 // is picked at random per request.
 // Run: node scripts/generate-og-image.mjs
@@ -9,7 +9,7 @@ import sharp from "sharp";
 const W = 1200;
 const H = 630;
 const VARIANTS = 6;
-const HEADER_H = 188;
+const HEADER_H = 240;
 
 const allPosts = [
   { img: "post-1.png", sns: "note", title: "夜の部屋のしゃべる鏡" },
@@ -34,49 +34,68 @@ const margin = 60;
 const gap = 30;
 const cols = 3;
 const cardW = Math.floor((W - margin * 2 - gap * (cols - 1)) / cols);
-const cardTop = HEADER_H + 28;
-const cardH = 258;
+const cardTop = HEADER_H + 48;
+const cardH = 288;
 const imgPad = 12;
 const imgW = cardW - imgPad * 2;
-const imgH = 168;
+const imgH = 178;
 
-// Large logo lockup that fills most of the blue header: white plate with the
-// book icon + a wide wordmark (letter-spacing spreads it across the width).
+// Logo lockup, centered: white plate with the book icon (unchanged size) + the
+// supplied wordmark image. The main copy sits directly below.
 const plate = 124;
 const iconSize = 92;
-const wordmarkFont = 116;
-const wordmarkSpacing = 16;
-const wordmark = "Postfolio";
-const wordmarkW = Math.round(
-  wordmark.length * wordmarkFont * 0.52 + wordmarkSpacing * (wordmark.length - 1),
-);
 const lockupGap = 28;
-const lockupX = Math.round((W - (plate + lockupGap + wordmarkW)) / 2);
-const plateY = Math.round((HEADER_H - plate) / 2);
+const plateY = 38;
 const icon = await sharp("public/postfolio-icon.png").resize({ width: iconSize }).toBuffer();
 
-// Main copy styled like the app's primary ("新規作成") button, split across two
-// lines and anchored to the bottom-right so it clears the title pill that X
-// overlays at the bottom-left of the card image.
-const copyLines = ["SNSで見つけた良い投稿を、", "次の企画につなげるリサーチ資産へ。"];
-const copyFont = 30;
-const copyLineH = 44;
-const copyPadX = 38;
-const copyPadY = 20;
-// A heavier, more assertive gothic than Meiryo for stronger presence.
+// Wordmark from the supplied logo image: drop the white background and recolour
+// the navy lettering to white so it reads on the blue header.
+const wordmarkH = 92;
+const wmAlpha = await sharp("public/postfolio-wordmark.png")
+  .greyscale()
+  .negate() // navy lettering -> bright, white bg -> dark
+  .linear(1.8, 0) // push the lettering fully opaque, keep the background transparent
+  .raw()
+  .toBuffer({ resolveWithObject: true });
+const wordmarkWhite = await sharp({
+  create: {
+    width: wmAlpha.info.width,
+    height: wmAlpha.info.height,
+    channels: 3,
+    background: { r: 255, g: 255, b: 255 },
+  },
+})
+  .joinChannel(wmAlpha.data, {
+    raw: { width: wmAlpha.info.width, height: wmAlpha.info.height, channels: 1 },
+  })
+  .png()
+  .toBuffer();
+const wordmark = await sharp(wordmarkWhite)
+  .trim()
+  .resize({ height: wordmarkH })
+  .png()
+  .toBuffer();
+const wordmarkImgW = (await sharp(wordmark).metadata()).width;
+
+const lockupW = plate + lockupGap + wordmarkImgW;
+const plateX = Math.round((W - lockupW) / 2);
+const wordmarkImgX = plateX + plate + lockupGap;
+const wordmarkImgY = plateY + Math.round((plate - wordmarkH) / 2);
+
+// Main copy: a single line of white text below the wordmark (no plate), aligned
+// to the same left edge as the logo.
+const copy = "SNSで見つけた良い投稿を、次の企画につなげるリサーチ資産へ。";
+const copyFont = 34;
 const copyFontFamily = "'Yu Gothic UI', 'Yu Gothic', 'BIZ UDPGothic', Meiryo, sans-serif";
-const copyLongest = copyLines.reduce((a, b) => (a.length >= b.length ? a : b));
-const copyW = Math.round(copyLongest.length * copyFont * 0.92) + copyPadX * 2;
-const copyH = copyPadY * 2 + copyLineH * copyLines.length;
-const copyX = W - margin - copyW;
-const copyY = H - 20 - copyH;
-const copyCenterX = copyX + copyW / 2;
+const copyX = W / 2;
+const copyTop = plateY + plate + 18;
 
 for (let v = 1; v <= VARIANTS; v++) {
   const picks = shuffle(allPosts).slice(0, cols);
   let cards = "";
   const composites = [
-    { input: icon, left: lockupX + Math.round((plate - iconSize) / 2), top: plateY + Math.round((plate - iconSize) / 2) },
+    { input: icon, left: plateX + Math.round((plate - iconSize) / 2), top: plateY + Math.round((plate - iconSize) / 2) },
+    { input: wordmark, left: wordmarkImgX, top: wordmarkImgY },
   ];
 
   for (let i = 0; i < picks.length; i++) {
@@ -109,22 +128,11 @@ for (let v = 1; v <= VARIANTS; v++) {
           <stop offset="0" stop-color="#172554"/>
           <stop offset="1" stop-color="#1e40af"/>
         </linearGradient>
-        <linearGradient id="btn" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#ff6b6b"/>
-          <stop offset="1" stop-color="#f59e0b"/>
-        </linearGradient>
       </defs>
       <rect width="${W}" height="${H}" fill="#eef2f7"/>
       <rect width="${W}" height="${HEADER_H}" fill="url(#hg)"/>
-      <rect x="${lockupX}" y="${plateY}" width="${plate}" height="${plate}" rx="28" fill="#ffffff"/>
-      <text x="${lockupX + plate + lockupGap}" y="${plateY + plate / 2 + 38}" font-size="${wordmarkFont}" letter-spacing="${wordmarkSpacing}" font-weight="700" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif">${wordmark}</text>
-      <rect x="${copyX}" y="${copyY}" width="${copyW}" height="${copyH}" rx="16" fill="url(#btn)"/>
-      ${copyLines
-        .map(
-          (line, i) =>
-            `<text x="${copyCenterX}" y="${copyY + copyPadY + copyLineH * i + 33}" font-size="${copyFont}" font-weight="900" fill="#0f172a" stroke="#0f172a" stroke-width="0.6" text-anchor="middle" font-family="${copyFontFamily}">${esc(line)}</text>`,
-        )
-        .join("")}
+      <rect x="${plateX}" y="${plateY}" width="${plate}" height="${plate}" rx="28" fill="#ffffff"/>
+      <text x="${copyX}" y="${copyTop + copyFont}" font-size="${copyFont}" font-weight="700" fill="#ffffff" text-anchor="middle" font-family="${copyFontFamily}">${esc(copy)}</text>
       ${cards}
     </svg>`,
   );
