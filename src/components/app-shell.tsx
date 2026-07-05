@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { LegalReturnLink } from "@/components/legal-return-link";
 import { LogoutButton } from "@/components/logout-button";
+import { APP_VERSION } from "@/lib/version";
 
 const labels = {
   ja: {
@@ -168,6 +169,9 @@ export function AppShell({
                 Postfolio
                 <span className="ml-2 hidden text-sm font-normal opacity-60 sm:inline">
                   SNS Research Box
+                </span>
+                <span className="ml-2 align-top text-[10px] font-normal opacity-55">
+                  {APP_VERSION}
                 </span>
               </span>
             </Link>

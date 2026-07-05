@@ -1,5 +1,6 @@
 ﻿import { PostfolioLogo } from "@/components/landing-v0/postfolio-logo"
 import { ShareButtons } from "@/components/landing-v0/share-buttons"
+import { APP_VERSION } from "@/lib/version"
 
 const groups = [
   {
@@ -72,7 +73,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 sm:flex-row">
           <p className="text-xs text-white/60">© 2026 Postfolio. All rights reserved.</p>
-          <p className="text-xs text-white/60">SNS Research Box</p>
+          <p className="text-xs text-white/60">SNS Research Box · {APP_VERSION}</p>
         </div>
       </div>
     </footer>
