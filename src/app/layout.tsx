@@ -20,10 +20,8 @@ export const metadata: Metadata = {
   ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
   title: ogTitle,
   description: ogDescription,
-  icons: {
-    icon: "/postfolio-icon.png",
-    apple: "/postfolio-icon.png",
-  },
+  // Favicon / touch icon are provided by src/app/icon.png and apple-icon.png,
+  // which Next.js links automatically (with cache-busting + correct type/size).
   openGraph: {
     type: "website",
     siteName: "Postfolio",
