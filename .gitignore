@@ -10,3 +10,4 @@ tsconfig.tsbuildinfo
 outputs
 tmp
 work
+.claude/
