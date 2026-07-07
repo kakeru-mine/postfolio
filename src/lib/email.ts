@@ -64,6 +64,42 @@ export function sendVerificationEmail(to: string, verifyUrl: string) {
   });
 }
 
+/**
+ * Notifies the operator that a new user has registered. The recipient is taken
+ * from ADMIN_NOTIFICATION_EMAIL (falling back to the contact address). When no
+ * address is configured the send is skipped, so registration keeps working.
+ */
+export function sendNewUserAdminNotification(input: {
+  email: string;
+  name: string | null;
+  totalUsers: number;
+}) {
+  const to =
+    process.env.ADMIN_NOTIFICATION_EMAIL ??
+    process.env.CONTACT_TO_EMAIL ??
+    process.env.LEGAL_CONTACT_EMAIL;
+  if (!to) {
+    console.warn(
+      "ADMIN_NOTIFICATION_EMAIL is not set; skipping new-user notification",
+    );
+    return Promise.resolve(false);
+  }
+
+  return sendEmail({
+    to,
+    subject: "【Postfolio】新規登録がありました",
+    text: [
+      "新しいユーザーが登録しました。",
+      "",
+      `表示名: ${input.name ?? "(未設定)"}`,
+      `メールアドレス: ${input.email}`,
+      `登録ユーザー数(累計): ${input.totalUsers}`,
+      "",
+      "※メールアドレス確認の完了状況に関わらず、登録操作の時点で送信しています。",
+    ].join("\n"),
+  });
+}
+
 export function sendPasswordResetEmail(to: string, resetUrl: string) {
   return sendEmail({
     to,

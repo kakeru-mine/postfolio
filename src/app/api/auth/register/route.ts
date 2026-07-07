@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { hashPassword } from "@/lib/auth";
 import { createUserToken } from "@/lib/auth-tokens";
-import { sendVerificationEmail } from "@/lib/email";
+import { sendNewUserAdminNotification, sendVerificationEmail } from "@/lib/email";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { canonicalAppUrl } from "@/lib/stripe";
@@ -83,6 +83,23 @@ export async function POST(request: NextRequest) {
     const token = await createUserToken(user.id, "EMAIL_VERIFICATION");
     const verifyUrl = `${canonicalAppUrl(request.nextUrl.origin)}/verify-email?token=${token}`;
     await sendVerificationEmail(email, verifyUrl);
+
+    // Notify the operator that a new user registered. Kept non-blocking so a
+    // notification failure never breaks the user's registration.
+    try {
+      const totalRows = await prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(*)::bigint AS "count"
+        FROM "User"
+        WHERE "passwordHash" IS NOT NULL
+      `;
+      await sendNewUserAdminNotification({
+        email,
+        name: user.name,
+        totalUsers: Number(totalRows[0]?.count ?? 0),
+      });
+    } catch (notifyError) {
+      console.error("Failed to send new-user admin notification", notifyError);
+    }
 
     return NextResponse.json({
       pending: true,
