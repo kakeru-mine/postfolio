@@ -82,7 +82,21 @@ export async function POST(request: NextRequest) {
     // Require email ownership confirmation before the account can sign in.
     const token = await createUserToken(user.id, "EMAIL_VERIFICATION");
     const verifyUrl = `${canonicalAppUrl(request.nextUrl.origin)}/verify-email?token=${token}`;
-    await sendVerificationEmail(email, verifyUrl);
+    const verificationSent = await sendVerificationEmail(email, verifyUrl);
+
+    // If the confirmation email could not be sent, do not report the
+    // registration as complete: the user would be stuck unable to verify or
+    // sign in. The account row already exists, so retrying registration (or the
+    // resend-verification flow) will re-issue the email.
+    if (!verificationSent) {
+      return NextResponse.json(
+        {
+          error:
+            "確認メールの送信に失敗しました。しばらく時間をおいて、もう一度お試しください。",
+        },
+        { status: 502 },
+      );
+    }
 
     // Notify the operator that a new user registered. Kept non-blocking so a
     // notification failure never breaks the user's registration.
