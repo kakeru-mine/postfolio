@@ -90,6 +90,12 @@ export async function createSession(userId: string) {
     VALUES (${randomUUID()}, ${tokenHash}, ${userId}, ${expiresAt}, NOW())
   `;
 
+  // Track last login for the admin user list. createSession is the single
+  // chokepoint for every sign-in, so updating it here covers all paths.
+  await prisma.$executeRaw`
+    UPDATE "User" SET "lastLoginAt" = NOW() WHERE "id" = ${userId}
+  `;
+
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,

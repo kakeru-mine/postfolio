@@ -22,9 +22,11 @@ export default async function AdminUsersPage() {
       name: true,
       email: true,
       emailVerifiedAt: true,
+      lastLoginAt: true,
       plan: true,
       subscriptionStatus: true,
       createdAt: true,
+      _count: { select: { savedItems: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -46,6 +48,8 @@ export default async function AdminUsersPage() {
     planLabel: getPlanDefinition(u.plan).name,
     isPaid: u.plan !== "FREE",
     subscriptionStatus: u.subscriptionStatus,
+    savedItemCount: u._count.savedItems,
+    lastLoginAt: u.lastLoginAt ? u.lastLoginAt.toISOString() : null,
     createdAt: u.createdAt.toISOString(),
   }));
 

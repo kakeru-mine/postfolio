@@ -34,6 +34,7 @@ model User {
   avatarUrl               String?
   passwordHash            String?
   emailVerifiedAt         DateTime?
+  lastLoginAt             DateTime?
   failedLoginAttempts     Int                @default(0)
   lockedUntil             DateTime?
   plan                    SubscriptionPlan   @default(FREE)
