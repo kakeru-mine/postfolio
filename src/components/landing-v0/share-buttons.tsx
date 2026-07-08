@@ -36,6 +36,9 @@ export function ShareButtons() {
   const lineHref = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
     lpUrl("line"),
   )}`;
+  const facebookHref = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+    lpUrl("facebook"),
+  )}`;
   const embedCode = `<a href="${lpUrl("embed")}" target="_blank" rel="noopener">Postfolio｜SNSリサーチボックス</a>`;
 
   async function copy(text: string, kind: "link" | "embed") {
@@ -65,6 +68,11 @@ export function ShareButtons() {
         <ShareLink href={lineHref} label="LINE" badge="#06C755">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true">
             <path d="M12 2.5c5.52 0 10 3.6 10 8.05 0 1.79-.71 3.4-2.05 4.86-1.95 2.24-6.3 4.97-7.29 5.39-.96.4-.84-.26-.8-.49l.13-.79c.03-.24.06-.6-.03-.83-.1-.25-.5-.38-.79-.44C6.04 19.4 2 15.66 2 10.55 2 6.1 6.48 2.5 12 2.5zM9.27 8.6h-.7c-.11 0-.2.09-.2.2v4.36c0 .11.09.2.2.2h.7c.11 0 .2-.09.2-.2V8.8c0-.11-.09-.2-.2-.2zm8.04 0h-.7c-.11 0-.2.09-.2.2v2.59L14.4 8.69l-.02-.02-.01-.02-.02-.01h-.02l-.01-.01h-.74c-.11 0-.2.09-.2.2v4.36c0 .11.09.2.2.2h.7c.11 0 .2-.09.2-.2v-2.59l2.01 2.71c.01.02.03.04.05.05l.02.01h.75c.11 0 .2-.09.2-.2V8.8c0-.11-.09-.2-.2-.2zm-9.62 3.66H6.16V8.8c0-.11-.09-.2-.2-.2h-.7c-.11 0-.2.09-.2.2v4.36c0 .05.02.1.06.14.04.04.08.06.14.06h2.83c.11 0 .2-.09.2-.2v-.7c0-.11-.09-.2-.2-.2zm4.5-3.66h-2.83c-.11 0-.2.09-.2.2v4.36c0 .11.09.2.2.2h2.83c.11 0 .2-.09.2-.2v-.7c0-.11-.09-.2-.2-.2h-1.93v-.74h1.93c.11 0 .2-.09.2-.2v-.7c0-.11-.09-.2-.2-.2h-1.93V9.7h1.93c.11 0 .2-.09.2-.2v-.7c0-.11-.09-.2-.2-.2z" />
+          </svg>
+        </ShareLink>
+        <ShareLink href={facebookHref} label="Facebook" badge="#1877F2">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M15.12 5.32H17V2.14C16.67 2.1 15.56 2 14.27 2 11.57 2 9.73 3.66 9.73 6.7v2.6H6.55v3.56h3.18V22h3.91v-8.14h3.06l.48-3.56h-3.54V7.05c0-1.03.28-1.73 1.76-1.73z" />
           </svg>
         </ShareLink>
         <ShareButton label="リンク" onClick={() => copy(lpUrl(), "link")}>
