@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Code2, Link2 } from "lucide-react";
+import { Code2, Link2, Mail } from "lucide-react";
 
 const SHARE_TEXT =
   "Postfolio｜SNSで見つけた良い投稿を、次の企画につなげるリサーチ資産へ。";
@@ -39,6 +39,17 @@ export function ShareButtons() {
   const facebookHref = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
     lpUrl("facebook"),
   )}`;
+  const pinterestHref = `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(
+    lpUrl("pinterest"),
+  )}&media=${encodeURIComponent(
+    `${baseUrl()}/og-1.png?v=${OG_SHARE_VERSION}`,
+  )}&description=${encodeURIComponent(SHARE_TEXT)}`;
+  const hatenaHref = `https://b.hatena.ne.jp/entry/panel/?url=${encodeURIComponent(
+    lpUrl("hatena"),
+  )}`;
+  const mailHref = `mailto:?subject=${encodeURIComponent(
+    "Postfolio｜SNSリサーチボックス",
+  )}&body=${encodeURIComponent(`${SHARE_TEXT}\n${lpUrl("email")}`)}`;
   const embedCode = `<a href="${lpUrl("embed")}" target="_blank" rel="noopener">Postfolio｜SNSリサーチボックス</a>`;
 
   async function copy(text: string, kind: "link" | "embed") {
@@ -74,6 +85,17 @@ export function ShareButtons() {
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
             <path d="M15.12 5.32H17V2.14C16.67 2.1 15.56 2 14.27 2 11.57 2 9.73 3.66 9.73 6.7v2.6H6.55v3.56h3.18V22h3.91v-8.14h3.06l.48-3.56h-3.54V7.05c0-1.03.28-1.73 1.76-1.73z" />
           </svg>
+        </ShareLink>
+        <ShareLink href={pinterestHref} label="Pinterest" badge="#E60023">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345c-.091.378-.293 1.194-.333 1.361-.052.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z" />
+          </svg>
+        </ShareLink>
+        <ShareLink href={hatenaHref} label="はてブ" badge="#00A4DE">
+          <span className="text-[13px] font-black leading-none">B!</span>
+        </ShareLink>
+        <ShareLink href={mailHref} label="メール" badge="#475569">
+          <Mail size={18} />
         </ShareLink>
         <ShareButton label="リンク" onClick={() => copy(lpUrl(), "link")}>
           <Link2 size={18} />
