@@ -231,6 +231,14 @@ export function AppShell({
                       {t.news}管理
                     </Link>
                   ) : null}
+                  {isAdmin ? (
+                    <Link
+                      href="/admin/users"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      登録者一覧
+                    </Link>
+                  ) : null}
                   <LegalReturnLink href="/terms" onClick={() => setMenuOpen(false)}>
                     {t.terms}
                   </LegalReturnLink>
@@ -266,6 +274,14 @@ export function AppShell({
                 className="font-bold text-[var(--primary)] transition hover:opacity-80"
               >
                 {t.news}管理
+              </Link>
+            ) : null}
+            {isAdmin ? (
+              <Link
+                href="/admin/users"
+                className="font-bold text-[var(--primary)] transition hover:opacity-80"
+              >
+                登録者一覧
               </Link>
             ) : null}
             <Link
