@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
   title: ogTitle,
   description: ogDescription,
+  // Suppress the search-result thumbnail: Google was shrinking the wide OG
+  // share card into a low-legibility square. Indexing/follow are unaffected;
+  // this only limits the image preview in results.
+  robots: { "max-image-preview": "none" },
   // Favicon / touch icon are provided by src/app/icon.png and apple-icon.png,
   // which Next.js links automatically (with cache-busting + correct type/size).
   openGraph: {
