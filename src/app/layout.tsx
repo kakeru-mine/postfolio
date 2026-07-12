@@ -32,13 +32,13 @@ export const metadata: Metadata = {
     title: ogTitle,
     description: ogDescription,
     locale: "ja_JP",
-    images: [{ url: "/og.png?v=12", width: 1200, height: 630, alt: "Postfolio" }],
+    images: [{ url: "/og.png?v=14", width: 1200, height: 630, alt: "Postfolio" }],
   },
   twitter: {
     card: "summary_large_image",
     title: ogTitle,
     description: ogDescription,
-    images: ["/og.png?v=12"],
+    images: ["/og.png?v=14"],
   },
 };
 

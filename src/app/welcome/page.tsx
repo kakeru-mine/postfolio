@@ -4,7 +4,7 @@ import { getOptionalCurrentUser } from "@/lib/user";
 
 // Bump when the og.png design changes so crawlers (esp. X, which caches images
 // by URL) fetch the new artwork instead of a stale cached copy.
-const OG_VERSION = "12";
+const OG_VERSION = "14";
 const OG_IMAGE = `/og.png?v=${OG_VERSION}`;
 
 export function generateMetadata(): Metadata {
