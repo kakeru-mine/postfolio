@@ -15,7 +15,7 @@ function baseUrl() {
 
 // Bump `ogv` alongside the og-*.png design (and OG_VERSION in welcome/page.tsx)
 // so X treats the shared URL as new and re-scrapes the refreshed card art.
-const OG_SHARE_VERSION = "11";
+const OG_SHARE_VERSION = "12";
 
 function lpUrl(source?: string) {
   const base = `${baseUrl()}/welcome`;
@@ -42,7 +42,7 @@ export function ShareButtons() {
   const pinterestHref = `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(
     lpUrl("pinterest"),
   )}&media=${encodeURIComponent(
-    `${baseUrl()}/og-1.png?v=${OG_SHARE_VERSION}`,
+    `${baseUrl()}/og.png?v=${OG_SHARE_VERSION}`,
   )}&description=${encodeURIComponent(SHARE_TEXT)}`;
   const hatenaHref = `https://b.hatena.ne.jp/entry/panel/?url=${encodeURIComponent(
     lpUrl("hatena"),
