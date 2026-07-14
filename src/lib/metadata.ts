@@ -781,6 +781,88 @@ function isThreadsStaticAsset(url: string) {
   return /static\.cdninstagram\.com|rsrc\.php|\.svg(?:\?|$)/i.test(url);
 }
 
+type RedditPostData = {
+  title?: string;
+  selftext?: string;
+  author?: string;
+  created_utc?: number;
+  thumbnail?: string;
+  url_overridden_by_dest?: string;
+  preview?: { images?: Array<{ source?: { url?: string } }> };
+};
+
+function extractRedditPost(data: unknown): RedditPostData | undefined {
+  if (!Array.isArray(data)) return undefined;
+  const listing = data[0] as
+    | { data?: { children?: Array<{ data?: RedditPostData }> } }
+    | undefined;
+  return listing?.data?.children?.[0]?.data;
+}
+
+// Reddit exposes a public JSON view of any post by appending `.json` to its URL
+// (no auth required), which yields far richer data than OGP: the post body
+// (selftext), author, timestamp and preview image.
+async function fetchRedditMetadata(url: URL): Promise<PlatformMetadata> {
+  try {
+    const jsonUrl = new URL(url.toString());
+    jsonUrl.hash = "";
+    jsonUrl.search = "";
+    jsonUrl.pathname = `${jsonUrl.pathname.replace(/\/+$/, "")}.json`;
+    await assertPublicUrl(jsonUrl);
+
+    const response = await fetch(jsonUrl, {
+      headers: {
+        "User-Agent": "PostfolioBot/0.1 (+https://postfolioapp.com)",
+        Accept: "application/json",
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return {};
+
+    const post = extractRedditPost(await response.json());
+    if (!post) return {};
+
+    const title = cleanMetadataValue(post.title);
+    const body = cleanMetadataValue(post.selftext);
+    const shortBody =
+      body && body.length > 280 ? `${body.slice(0, 280).trimEnd()}…` : body;
+    const longBody = body && body.length > 5000 ? body.slice(0, 5000) : body;
+
+    const previewImage = post.preview?.images?.[0]?.source?.url;
+    const linkedImage =
+      post.url_overridden_by_dest &&
+      /\.(?:jpg|jpeg|png|gif|webp)(?:\?|$)/i.test(post.url_overridden_by_dest)
+        ? post.url_overridden_by_dest
+        : undefined;
+    const rawThumbnail =
+      previewImage ||
+      linkedImage ||
+      (typeof post.thumbnail === "string" && /^https?:\/\//.test(post.thumbnail)
+        ? post.thumbnail
+        : undefined);
+    // Reddit JSON encodes `&` as `&amp;` inside image URLs; decode before use.
+    const thumbnailUrl = normalizeMetadataUrl(
+      rawThumbnail?.replace(/&amp;/g, "&"),
+    );
+
+    return {
+      title,
+      description: shortBody || title,
+      authorName: post.author ? `u/${post.author}` : undefined,
+      publishedAt:
+        typeof post.created_utc === "number"
+          ? parseValidDate(post.created_utc * 1000)
+          : undefined,
+      thumbnailUrl,
+      postText: longBody || title,
+      mediaUrls: thumbnailUrl ? [thumbnailUrl] : [],
+    };
+  } catch {
+    return {};
+  }
+}
+
 async function fetchPlatformFallbackMetadata(
   url: URL,
   sourcePlatform = detectPlatform(url.hostname),
@@ -790,7 +872,9 @@ async function fetchPlatformFallbackMetadata(
       ? await fetchYouTubeMetadata(url, "")
       : sourcePlatform === "THREADS"
         ? await fetchThreadsPreviewMetadata(url)
-        : {};
+        : sourcePlatform === "REDDIT"
+          ? await fetchRedditMetadata(url)
+          : {};
 
   if (!hasMetadata(metadata)) return undefined;
 
@@ -874,6 +958,8 @@ export async function fetchUrlMetadata(rawUrl: string) {
             )
         : sourcePlatform === "SUBSTACK"
           ? extractSubstackMetadata($, finalUrl, html)
+        : sourcePlatform === "REDDIT"
+          ? await fetchRedditMetadata(finalUrl)
           : {};
     const discoveredMetadata = await fetchDiscoveredOEmbed($, finalUrl);
     const structuredAuthorName = findAuthorNameFromStructuredData($);

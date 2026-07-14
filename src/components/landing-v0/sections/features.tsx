@@ -9,7 +9,7 @@ const features = [
   {
     icon: Globe,
     title: "マルチSNS対応",
-    body: "X / Instagram / Threads / YouTube / note / Substack / TikTok。主要SNSを横断して一元管理。",
+    body: "X / Instagram / Threads / YouTube / note / Substack / TikTok / Reddit。主要SNSを横断して一元管理。",
   },
   {
     icon: Search,

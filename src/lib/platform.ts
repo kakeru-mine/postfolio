@@ -22,6 +22,7 @@ export const supportedPlatforms = [
   "NOTE",
   "SUBSTACK",
   "TIKTOK",
+  "REDDIT",
 ] as const satisfies readonly SourcePlatform[];
 
 export function detectPlatform(hostname: string): SourcePlatform {

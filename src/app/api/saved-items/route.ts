@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "対応しているSNSのURLを入力してください。X、Instagram、Threads、YouTube、note、Substack、TikTokに対応しています。",
+            "対応しているSNSのURLを入力してください。X、Instagram、Threads、YouTube、note、Substack、TikTok、Redditに対応しています。",
         },
         { status: 400 },
       );
