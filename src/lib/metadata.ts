@@ -804,15 +804,25 @@ function extractRedditPost(data: unknown): RedditPostData | undefined {
 // (selftext), author, timestamp and preview image.
 async function fetchRedditMetadata(url: URL): Promise<PlatformMetadata> {
   try {
-    const jsonUrl = new URL(url.toString());
-    jsonUrl.hash = "";
-    jsonUrl.search = "";
-    jsonUrl.pathname = `${jsonUrl.pathname.replace(/\/+$/, "")}.json`;
+    // Build a clean `.json` endpoint from the post id, dropping the title slug
+    // (which may be non-ASCII, e.g. Japanese) — /r/<sub>/comments/<id>.json.
+    const postId = url.pathname.match(/\/comments\/([a-z0-9]+)/i)?.[1];
+    if (!postId) return {};
+    const subreddit = url.pathname.match(/\/r\/([^/]+)/i)?.[1];
+    const jsonUrl = new URL(
+      subreddit
+        ? `https://www.reddit.com/r/${subreddit}/comments/${postId}.json`
+        : `https://www.reddit.com/comments/${postId}.json`,
+    );
+    jsonUrl.searchParams.set("raw_json", "1");
     await assertPublicUrl(jsonUrl);
 
     const response = await fetch(jsonUrl, {
       headers: {
-        "User-Agent": "PostfolioBot/0.1 (+https://postfolioapp.com)",
+        // Reddit blocks generic/bot user agents; a browser-like UA is far more
+        // reliable for the public JSON endpoint.
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
         Accept: "application/json",
       },
       cache: "no-store",
