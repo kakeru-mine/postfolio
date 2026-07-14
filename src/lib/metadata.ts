@@ -799,31 +799,82 @@ function extractRedditPost(data: unknown): RedditPostData | undefined {
   return listing?.data?.children?.[0]?.data;
 }
 
-// Reddit exposes a public JSON view of any post by appending `.json` to its URL
-// (no auth required), which yields far richer data than OGP: the post body
-// (selftext), author, timestamp and preview image.
+// Reddit requires a descriptive User-Agent; generic/bot ones are blocked.
+const REDDIT_USER_AGENT = "web:postfolio:v1.0.0 (+https://postfolioapp.com)";
+
+// Cache the app-only OAuth token across requests within a warm instance.
+let redditToken: { value: string; expiresAt: number } | null = null;
+
+// App-only OAuth (client_credentials). Reddit blocks anonymous requests from
+// datacenter IPs (e.g. Vercel) regardless of User-Agent, but authenticated API
+// requests are allowed. Returns null when credentials are not configured, so
+// the caller can fall back to the public endpoint (works in local dev).
+async function getRedditAccessToken(): Promise<string | null> {
+  const clientId = process.env.REDDIT_CLIENT_ID;
+  const clientSecret = process.env.REDDIT_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+  if (redditToken && redditToken.expiresAt > Date.now() + 60_000) {
+    return redditToken.value;
+  }
+
+  try {
+    const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+    const response = await fetch("https://www.reddit.com/api/v1/access_token", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${basic}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": REDDIT_USER_AGENT,
+      },
+      body: "grant_type=client_credentials",
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as {
+      access_token?: string;
+      expires_in?: number;
+    };
+    if (!data.access_token) return null;
+    redditToken = {
+      value: data.access_token,
+      expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000,
+    };
+    return redditToken.value;
+  } catch {
+    return null;
+  }
+}
+
+// Fetches a Reddit post's rich data (title, selftext, author, timestamp,
+// preview image) via the JSON API — authenticated when OAuth credentials are
+// set, otherwise the public endpoint.
 async function fetchRedditMetadata(url: URL): Promise<PlatformMetadata> {
   try {
-    // Build a clean `.json` endpoint from the post id, dropping the title slug
-    // (which may be non-ASCII, e.g. Japanese) — /r/<sub>/comments/<id>.json.
+    // Build the endpoint from the post id, dropping the title slug (which may be
+    // non-ASCII, e.g. Japanese) — /r/<sub>/comments/<id>.json.
     const postId = url.pathname.match(/\/comments\/([a-z0-9]+)/i)?.[1];
     if (!postId) return {};
     const subreddit = url.pathname.match(/\/r\/([^/]+)/i)?.[1];
-    const jsonUrl = new URL(
-      subreddit
-        ? `https://www.reddit.com/r/${subreddit}/comments/${postId}.json`
-        : `https://www.reddit.com/comments/${postId}.json`,
-    );
-    jsonUrl.searchParams.set("raw_json", "1");
-    await assertPublicUrl(jsonUrl);
+    const path = subreddit
+      ? `/r/${subreddit}/comments/${postId}.json`
+      : `/comments/${postId}.json`;
 
-    const response = await fetch(jsonUrl, {
+    const token = await getRedditAccessToken();
+    const endpoint = new URL(
+      token
+        ? `https://oauth.reddit.com${path}`
+        : `https://www.reddit.com${path}`,
+    );
+    endpoint.searchParams.set("raw_json", "1");
+    await assertPublicUrl(endpoint);
+
+    const response = await fetch(endpoint, {
       headers: {
-        // Reddit blocks generic/bot user agents; a browser-like UA is far more
-        // reliable for the public JSON endpoint.
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "User-Agent": REDDIT_USER_AGENT,
         Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
