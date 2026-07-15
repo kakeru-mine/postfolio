@@ -18,6 +18,7 @@ enum SourcePlatform {
   FACEBOOK
   LINKEDIN
   REDDIT
+  BLUESKY
   OTHER
 }
 

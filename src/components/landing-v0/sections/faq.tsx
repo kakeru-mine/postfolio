@@ -6,7 +6,7 @@ import { Plus, Minus } from "lucide-react"
 const faqs = [
   {
     q: "どのSNSに対応していますか？",
-    a: "X / Instagram / Threads / YouTube / note / Substack / TikTok / Reddit など、主要なSNSに対応しています。投稿のURLを貼るだけで、本文や画像などをまとめて保存できます。",
+    a: "X / Instagram / Threads / YouTube / note / Substack / TikTok / Reddit / Bluesky など、主要なSNSに対応しています。投稿のURLを貼るだけで、本文や画像などをまとめて保存できます。",
   },
   {
     q: "AI分析では何がわかりますか？",

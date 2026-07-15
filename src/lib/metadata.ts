@@ -924,6 +924,108 @@ async function fetchRedditMetadata(url: URL): Promise<PlatformMetadata> {
   }
 }
 
+type BlueskyEmbed = {
+  $type?: string;
+  images?: Array<{ fullsize?: string; thumb?: string }>;
+  thumbnail?: string;
+  external?: { thumb?: string };
+  media?: BlueskyEmbed;
+};
+
+type BlueskyPost = {
+  author?: { handle?: string; displayName?: string };
+  record?: { text?: string; createdAt?: string };
+  embed?: BlueskyEmbed;
+};
+
+function extractBlueskyImages(embed: BlueskyEmbed | undefined): string[] {
+  if (!embed) return [];
+  switch (embed.$type) {
+    case "app.bsky.embed.images#view":
+      return (embed.images ?? [])
+        .map((image) => image.fullsize || image.thumb)
+        .filter((value): value is string => Boolean(value));
+    case "app.bsky.embed.video#view":
+      return embed.thumbnail ? [embed.thumbnail] : [];
+    case "app.bsky.embed.external#view":
+      return embed.external?.thumb ? [embed.external.thumb] : [];
+    case "app.bsky.embed.recordWithMedia#view":
+      return extractBlueskyImages(embed.media);
+    default:
+      return [];
+  }
+}
+
+// Bluesky (AT Protocol) exposes an open, auth-free public API. Resolve the
+// handle to a DID, then fetch the post record (text, author, timestamp, media).
+async function fetchBlueskyMetadata(url: URL): Promise<PlatformMetadata> {
+  try {
+    const match = url.pathname.match(/\/profile\/([^/]+)\/post\/([^/]+)/);
+    if (!match) return {};
+    const actor = decodeURIComponent(match[1]);
+    const rkey = match[2];
+
+    let did = actor;
+    if (!actor.startsWith("did:")) {
+      const resolveUrl = new URL(
+        "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle",
+      );
+      resolveUrl.searchParams.set("handle", actor);
+      const resolveResponse = await fetch(resolveUrl, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(8_000),
+      });
+      if (!resolveResponse.ok) return {};
+      const resolved = (await resolveResponse.json()) as { did?: string };
+      if (!resolved.did) return {};
+      did = resolved.did;
+    }
+
+    const threadUrl = new URL(
+      "https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread",
+    );
+    threadUrl.searchParams.set("uri", `at://${did}/app.bsky.feed.post/${rkey}`);
+    threadUrl.searchParams.set("depth", "0");
+    const response = await fetch(threadUrl, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return {};
+
+    const data = (await response.json()) as {
+      thread?: { post?: BlueskyPost };
+    };
+    const post = data.thread?.post;
+    if (!post) return {};
+
+    const text = cleanMetadataValue(post.record?.text);
+    const shortText =
+      text && text.length > 280 ? `${text.slice(0, 280).trimEnd()}…` : text;
+    const author = post.author;
+    const authorName = author?.handle
+      ? author.displayName
+        ? `${author.displayName} (@${author.handle})`
+        : `@${author.handle}`
+      : undefined;
+    const images = extractBlueskyImages(post.embed);
+    const thumbnailUrl = normalizeMetadataUrl(images[0]);
+
+    return {
+      title: shortText,
+      description: shortText,
+      authorName,
+      publishedAt: post.record?.createdAt
+        ? parseValidDate(post.record.createdAt)
+        : undefined,
+      thumbnailUrl,
+      postText: text,
+      mediaUrls: images,
+    };
+  } catch {
+    return {};
+  }
+}
+
 async function fetchPlatformFallbackMetadata(
   url: URL,
   sourcePlatform = detectPlatform(url.hostname),
@@ -935,6 +1037,8 @@ async function fetchPlatformFallbackMetadata(
         ? await fetchThreadsPreviewMetadata(url)
         : sourcePlatform === "REDDIT"
           ? await fetchRedditMetadata(url)
+        : sourcePlatform === "BLUESKY"
+          ? await fetchBlueskyMetadata(url)
           : {};
 
   if (!hasMetadata(metadata)) return undefined;
@@ -1021,6 +1125,8 @@ export async function fetchUrlMetadata(rawUrl: string) {
           ? extractSubstackMetadata($, finalUrl, html)
         : sourcePlatform === "REDDIT"
           ? await fetchRedditMetadata(finalUrl)
+        : sourcePlatform === "BLUESKY"
+          ? await fetchBlueskyMetadata(finalUrl)
           : {};
     const discoveredMetadata = await fetchDiscoveredOEmbed($, finalUrl);
     const structuredAuthorName = findAuthorNameFromStructuredData($);
