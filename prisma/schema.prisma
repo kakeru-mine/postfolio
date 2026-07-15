@@ -19,6 +19,7 @@ enum SourcePlatform {
   LINKEDIN
   REDDIT
   BLUESKY
+  PINTEREST
   OTHER
 }
 

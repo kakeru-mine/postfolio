@@ -1026,6 +1026,43 @@ async function fetchBlueskyMetadata(url: URL): Promise<PlatformMetadata> {
   }
 }
 
+// Pinterest pins expose an oEmbed endpoint (no auth) with the pin image, title
+// and author; combined with the page's OGP tags this is enough to save a pin.
+async function fetchPinterestMetadata(url: URL): Promise<PlatformMetadata> {
+  try {
+    const oEmbedUrl = new URL("https://www.pinterest.com/oembed.json");
+    oEmbedUrl.searchParams.set("url", url.toString());
+    const response = await fetch(oEmbedUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        Accept: "application/json",
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return {};
+
+    const result = (await response.json()) as {
+      title?: string;
+      author_name?: string;
+      thumbnail_url?: string;
+    };
+    const title = cleanMetadataValue(result.title);
+    const thumbnailUrl = normalizeMetadataUrl(result.thumbnail_url);
+    return {
+      title,
+      description: title,
+      authorName: cleanMetadataValue(result.author_name),
+      thumbnailUrl,
+      postText: title,
+      mediaUrls: thumbnailUrl ? [thumbnailUrl] : [],
+    };
+  } catch {
+    return {};
+  }
+}
+
 async function fetchPlatformFallbackMetadata(
   url: URL,
   sourcePlatform = detectPlatform(url.hostname),
@@ -1039,6 +1076,8 @@ async function fetchPlatformFallbackMetadata(
           ? await fetchRedditMetadata(url)
         : sourcePlatform === "BLUESKY"
           ? await fetchBlueskyMetadata(url)
+        : sourcePlatform === "PINTEREST"
+          ? await fetchPinterestMetadata(url)
           : {};
 
   if (!hasMetadata(metadata)) return undefined;
@@ -1127,6 +1166,8 @@ export async function fetchUrlMetadata(rawUrl: string) {
           ? await fetchRedditMetadata(finalUrl)
         : sourcePlatform === "BLUESKY"
           ? await fetchBlueskyMetadata(finalUrl)
+        : sourcePlatform === "PINTEREST"
+          ? await fetchPinterestMetadata(finalUrl)
           : {};
     const discoveredMetadata = await fetchDiscoveredOEmbed($, finalUrl);
     const structuredAuthorName = findAuthorNameFromStructuredData($);

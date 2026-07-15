@@ -12,6 +12,7 @@ const platformLabels: Record<SourcePlatform, string> = {
   LINKEDIN: "LinkedIn",
   REDDIT: "Reddit",
   BLUESKY: "Bluesky",
+  PINTEREST: "Pinterest",
   OTHER: "その他",
 };
 
@@ -25,6 +26,7 @@ export const supportedPlatforms = [
   "TIKTOK",
   "REDDIT",
   "BLUESKY",
+  "PINTEREST",
 ] as const satisfies readonly SourcePlatform[];
 
 export function detectPlatform(hostname: string): SourcePlatform {
@@ -52,6 +54,7 @@ export function detectPlatform(hostname: string): SourcePlatform {
   if (isDomain(host, "reddit.com") || host === "redd.it")
     return "REDDIT";
   if (isDomain(host, "bsky.app")) return "BLUESKY";
+  if (host === "pin.it" || /(^|\.)pinterest\./.test(host)) return "PINTEREST";
   return "OTHER";
 }
 
