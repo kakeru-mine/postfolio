@@ -1,7 +1,7 @@
 ﻿import { Search, Plus, SlidersHorizontal, Check } from "lucide-react"
 import Image from "next/image"
 
-const snsFilters = ["すべて", "X", "Instagram", "Threads", "YouTube", "note", "Substack", "TikTok", "Reddit", "Bluesky"]
+const snsFilters = ["すべて", "X", "Instagram", "Threads", "YouTube", "note", "Substack", "TikTok"]
 
 type Post = {
   img: string
@@ -70,8 +70,6 @@ const snsColor: Record<string, string> = {
   X: "text-navy",
   YouTube: "text-red-600",
   Substack: "text-orange-600",
-  Reddit: "text-orange-500",
-  Bluesky: "text-sky-500",
 }
 
 export function LibraryMock({ compact = false }: { compact?: boolean }) {
