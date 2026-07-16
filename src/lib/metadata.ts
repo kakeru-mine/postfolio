@@ -218,9 +218,10 @@ async function fetchYouTubeMetadata(
       ? metadata.mediaUrls
       : [metadata.thumbnailUrl];
 
-  const viewCount = html.match(
-    /"videoDetails"\s*:\s*{[\s\S]{0,4000}?"viewCount"\s*:\s*"(\d+)"/,
-  )?.[1];
+  // videoDetails.viewCount (and its microformat copy) is a plain string value;
+  // match the first string-valued viewCount so a long description/thumbnail
+  // block can't push it out of range, and skip the renderer object variant.
+  const viewCount = html.match(/"viewCount"\s*:\s*"(\d+)"/)?.[1];
   if (viewCount) {
     metadata.engagement = nonEmptyEngagement({
       view: Number(viewCount),
