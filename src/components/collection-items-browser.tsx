@@ -18,6 +18,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AiAnalysisPanel } from "@/components/ai-analysis-panel";
 import { BulkItemActions } from "@/components/bulk-item-actions";
+import type { EngagementMetrics } from "@/lib/engagement";
 import { ItemEditor } from "@/components/item-editor";
 import { MetadataRefreshButton } from "@/components/metadata-refresh-button";
 import { platformLabel } from "@/lib/platform";
@@ -271,11 +272,12 @@ export function CollectionItemsBrowser({
           <AiAnalysisPanel
             key={`analysis-${selectedItem.id}`}
             itemId={selectedItem.id}
+            platform={selectedItem.sourcePlatform}
+            engagement={selectedItem.engagement as EngagementMetrics | null}
             initialAnalysis={{
               summary: selectedItem.aiSummary,
               rating: selectedItem.aiRating,
               growthReason: selectedItem.aiGrowthReason,
-              contentAngles: selectedItem.aiContentAngles,
               reuseSuggestion: selectedItem.aiUseCases[0] ?? null,
             }}
           />

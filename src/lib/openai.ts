@@ -4,7 +4,6 @@ const analysisSchema = z.object({
   summary: z.string().min(1).max(500),
   rating: z.enum(["S", "A", "B", "C", "D", "E"]),
   growthReason: z.string().min(1).max(800),
-  contentAngles: z.array(z.string().min(1).max(160)).min(1).max(6),
   reuseSuggestion: z.string().min(1).max(1200),
 });
 
@@ -29,13 +28,6 @@ const jsonSchema = {
       description:
         "投稿評価の根拠。高評価では反応や内容面で良かった点を、低評価では伸びにくい理由や改善点を日本語で記述する。再利用観点ではなく投稿自体を評価する",
     },
-    contentAngles: {
-      type: "array",
-      items: { type: "string" },
-      minItems: 1,
-      maxItems: 6,
-      description: "記事やSNS投稿へ展開できる切り口",
-    },
     reuseSuggestion: {
       type: "string",
       description:
@@ -46,7 +38,6 @@ const jsonSchema = {
     "summary",
     "rating",
     "growthReason",
-    "contentAngles",
     "reuseSuggestion",
   ],
 } as const;

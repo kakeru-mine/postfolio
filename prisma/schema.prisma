@@ -108,6 +108,7 @@ model SavedItem {
   quotedPostAuthor String?
   threadTexts     String[]       @default([])
   contentFetchedAt DateTime?
+  engagement      Json?
   publishedAt     DateTime?
   userMemo        String?
   purpose         String?

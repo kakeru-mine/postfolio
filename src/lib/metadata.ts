@@ -3,6 +3,7 @@ import type { SourcePlatform } from "@prisma/client";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { assertNotLiveBroadcast } from "@/lib/live-broadcast";
+import { nonEmptyEngagement, type EngagementMetrics } from "@/lib/engagement";
 import { detectPlatform } from "@/lib/platform";
 import { ensureSystemCa } from "@/lib/system-ca";
 import { fetchXContent } from "@/lib/x-content";
@@ -113,6 +114,7 @@ type PlatformMetadata = {
   publishedAt?: Date;
   postText?: string;
   mediaUrls?: string[];
+  engagement?: EngagementMetrics;
 };
 
 type FetchedMetadata = {
@@ -123,6 +125,7 @@ type FetchedMetadata = {
   publishedAt: Date | undefined;
   postText?: string;
   mediaUrls?: string[];
+  engagement?: EngagementMetrics;
   domain: string;
   sourcePlatform: SourcePlatform;
 };
@@ -214,6 +217,16 @@ async function fetchYouTubeMetadata(
     metadata.mediaUrls?.length || !metadata.thumbnailUrl
       ? metadata.mediaUrls
       : [metadata.thumbnailUrl];
+
+  const viewCount = html.match(
+    /"videoDetails"\s*:\s*{[\s\S]{0,4000}?"viewCount"\s*:\s*"(\d+)"/,
+  )?.[1];
+  if (viewCount) {
+    metadata.engagement = nonEmptyEngagement({
+      view: Number(viewCount),
+      fetchedAt: new Date().toISOString(),
+    });
+  }
 
   try {
     const oEmbedUrl = new URL("https://www.youtube.com/oembed");
@@ -789,6 +802,9 @@ type RedditPostData = {
   thumbnail?: string;
   url_overridden_by_dest?: string;
   preview?: { images?: Array<{ source?: { url?: string } }> };
+  score?: number;
+  num_comments?: number;
+  upvote_ratio?: number;
 };
 
 function extractRedditPost(data: unknown): RedditPostData | undefined {
@@ -918,6 +934,12 @@ async function fetchRedditMetadata(url: URL): Promise<PlatformMetadata> {
       thumbnailUrl,
       postText: longBody || title,
       mediaUrls: thumbnailUrl ? [thumbnailUrl] : [],
+      engagement: nonEmptyEngagement({
+        score: post.score,
+        reply: post.num_comments,
+        upvoteRatio: post.upvote_ratio,
+        fetchedAt: new Date().toISOString(),
+      }),
     };
   } catch {
     return {};
@@ -936,6 +958,10 @@ type BlueskyPost = {
   author?: { handle?: string; displayName?: string };
   record?: { text?: string; createdAt?: string };
   embed?: BlueskyEmbed;
+  likeCount?: number;
+  repostCount?: number;
+  replyCount?: number;
+  quoteCount?: number;
 };
 
 function extractBlueskyImages(embed: BlueskyEmbed | undefined): string[] {
@@ -1020,6 +1046,13 @@ async function fetchBlueskyMetadata(url: URL): Promise<PlatformMetadata> {
       thumbnailUrl,
       postText: text,
       mediaUrls: images,
+      engagement: nonEmptyEngagement({
+        like: post.likeCount,
+        repost: post.repostCount,
+        reply: post.replyCount,
+        quote: post.quoteCount,
+        fetchedAt: new Date().toISOString(),
+      }),
     };
   } catch {
     return {};
@@ -1090,6 +1123,7 @@ async function fetchPlatformFallbackMetadata(
     publishedAt: metadata.publishedAt,
     postText: metadata.postText,
     mediaUrls: metadata.mediaUrls || [],
+    engagement: metadata.engagement,
     domain: url.hostname.replace(/^www\./, ""),
     sourcePlatform,
   };
@@ -1248,6 +1282,10 @@ export async function fetchUrlMetadata(rawUrl: string) {
             : thumbnailUrl
               ? [thumbnailUrl]
               : [],
+      engagement:
+        enrichedContent?.engagement ??
+        youTubeMetadata?.engagement ??
+        platformMetadata.engagement,
       ...(enrichedContent
         ? {
             ...enrichedContent,
