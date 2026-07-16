@@ -200,6 +200,51 @@ async function fetchDiscoveredOEmbed(
   }
 }
 
+// YouTube does not reliably expose view counts in the server-fetched HTML, so
+// use the free Data API v3 when a key is configured (statistics.viewCount, plus
+// like/comment counts). Returns undefined without a key so callers fall back.
+async function fetchYouTubeStats(
+  videoId: string,
+): Promise<EngagementMetrics | undefined> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) return undefined;
+
+  try {
+    const statsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+    statsUrl.searchParams.set("part", "statistics");
+    statsUrl.searchParams.set("id", videoId);
+    statsUrl.searchParams.set("key", apiKey);
+    const response = await fetch(statsUrl, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return undefined;
+
+    const data = (await response.json()) as {
+      items?: Array<{
+        statistics?: {
+          viewCount?: string;
+          likeCount?: string;
+          commentCount?: string;
+        };
+      }>;
+    };
+    const stats = data.items?.[0]?.statistics;
+    if (!stats) return undefined;
+
+    const toNumber = (value: string | undefined) =>
+      value !== undefined && value !== "" ? Number(value) : undefined;
+    return nonEmptyEngagement({
+      view: toNumber(stats.viewCount),
+      like: toNumber(stats.likeCount),
+      reply: toNumber(stats.commentCount),
+      fetchedAt: new Date().toISOString(),
+    });
+  } catch {
+    return undefined;
+  }
+}
+
 async function fetchYouTubeMetadata(
   url: URL,
   html: string,
@@ -218,15 +263,19 @@ async function fetchYouTubeMetadata(
       ? metadata.mediaUrls
       : [metadata.thumbnailUrl];
 
-  // videoDetails.viewCount (and its microformat copy) is a plain string value;
-  // match the first string-valued viewCount so a long description/thumbnail
-  // block can't push it out of range, and skip the renderer object variant.
-  const viewCount = html.match(/"viewCount"\s*:\s*"(\d+)"/)?.[1];
-  if (viewCount) {
-    metadata.engagement = nonEmptyEngagement({
-      view: Number(viewCount),
-      fetchedAt: new Date().toISOString(),
-    });
+  // Prefer the Data API (reliable); fall back to scraping the player JSON's
+  // string-valued viewCount when no API key is configured.
+  const apiStats = videoId ? await fetchYouTubeStats(videoId) : undefined;
+  if (apiStats) {
+    metadata.engagement = apiStats;
+  } else {
+    const viewCount = html.match(/"viewCount"\s*:\s*"(\d+)"/)?.[1];
+    if (viewCount) {
+      metadata.engagement = nonEmptyEngagement({
+        view: Number(viewCount),
+        fetchedAt: new Date().toISOString(),
+      });
+    }
   }
 
   try {
