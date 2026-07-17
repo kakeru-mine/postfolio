@@ -4,7 +4,6 @@ import { ArrowLeft, Calendar, CalendarDays, Globe2, UserRound } from "lucide-rea
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AiAnalysisPanel } from "@/components/ai-analysis-panel";
-import type { EngagementMetrics } from "@/lib/engagement";
 import { ItemEditor } from "@/components/item-editor";
 import { MetadataRefreshButton } from "@/components/metadata-refresh-button";
 import { ThumbnailImage } from "@/components/thumbnail-image";
@@ -138,12 +137,11 @@ export default async function ItemDetail({
 
           <AiAnalysisPanel
             itemId={item.id}
-            platform={item.sourcePlatform}
-            engagement={item.engagement as EngagementMetrics | null}
             initialAnalysis={{
               summary: item.aiSummary,
               rating: aiRating,
               growthReason: item.aiGrowthReason,
+              contentAngles: item.aiContentAngles,
               reuseSuggestion: item.aiUseCases[0] ?? null,
             }}
           />

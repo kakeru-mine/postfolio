@@ -3,7 +3,6 @@ import type { SourcePlatform } from "@prisma/client";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { assertNotLiveBroadcast } from "@/lib/live-broadcast";
-import { nonEmptyEngagement, type EngagementMetrics } from "@/lib/engagement";
 import { detectPlatform } from "@/lib/platform";
 import { ensureSystemCa } from "@/lib/system-ca";
 import { fetchXContent } from "@/lib/x-content";
@@ -114,7 +113,6 @@ type PlatformMetadata = {
   publishedAt?: Date;
   postText?: string;
   mediaUrls?: string[];
-  engagement?: EngagementMetrics;
 };
 
 type FetchedMetadata = {
@@ -125,7 +123,6 @@ type FetchedMetadata = {
   publishedAt: Date | undefined;
   postText?: string;
   mediaUrls?: string[];
-  engagement?: EngagementMetrics;
   domain: string;
   sourcePlatform: SourcePlatform;
 };
@@ -200,51 +197,6 @@ async function fetchDiscoveredOEmbed(
   }
 }
 
-// YouTube does not reliably expose view counts in the server-fetched HTML, so
-// use the free Data API v3 when a key is configured (statistics.viewCount, plus
-// like/comment counts). Returns undefined without a key so callers fall back.
-async function fetchYouTubeStats(
-  videoId: string,
-): Promise<EngagementMetrics | undefined> {
-  const apiKey = process.env.YOUTUBE_API_KEY;
-  if (!apiKey) return undefined;
-
-  try {
-    const statsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
-    statsUrl.searchParams.set("part", "statistics");
-    statsUrl.searchParams.set("id", videoId);
-    statsUrl.searchParams.set("key", apiKey);
-    const response = await fetch(statsUrl, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!response.ok) return undefined;
-
-    const data = (await response.json()) as {
-      items?: Array<{
-        statistics?: {
-          viewCount?: string;
-          likeCount?: string;
-          commentCount?: string;
-        };
-      }>;
-    };
-    const stats = data.items?.[0]?.statistics;
-    if (!stats) return undefined;
-
-    const toNumber = (value: string | undefined) =>
-      value !== undefined && value !== "" ? Number(value) : undefined;
-    return nonEmptyEngagement({
-      view: toNumber(stats.viewCount),
-      like: toNumber(stats.likeCount),
-      reply: toNumber(stats.commentCount),
-      fetchedAt: new Date().toISOString(),
-    });
-  } catch {
-    return undefined;
-  }
-}
-
 async function fetchYouTubeMetadata(
   url: URL,
   html: string,
@@ -262,21 +214,6 @@ async function fetchYouTubeMetadata(
     metadata.mediaUrls?.length || !metadata.thumbnailUrl
       ? metadata.mediaUrls
       : [metadata.thumbnailUrl];
-
-  // Prefer the Data API (reliable); fall back to scraping the player JSON's
-  // string-valued viewCount when no API key is configured.
-  const apiStats = videoId ? await fetchYouTubeStats(videoId) : undefined;
-  if (apiStats) {
-    metadata.engagement = apiStats;
-  } else {
-    const viewCount = html.match(/"viewCount"\s*:\s*"(\d+)"/)?.[1];
-    if (viewCount) {
-      metadata.engagement = nonEmptyEngagement({
-        view: Number(viewCount),
-        fetchedAt: new Date().toISOString(),
-      });
-    }
-  }
 
   try {
     const oEmbedUrl = new URL("https://www.youtube.com/oembed");
@@ -852,9 +789,6 @@ type RedditPostData = {
   thumbnail?: string;
   url_overridden_by_dest?: string;
   preview?: { images?: Array<{ source?: { url?: string } }> };
-  score?: number;
-  num_comments?: number;
-  upvote_ratio?: number;
 };
 
 function extractRedditPost(data: unknown): RedditPostData | undefined {
@@ -984,12 +918,6 @@ async function fetchRedditMetadata(url: URL): Promise<PlatformMetadata> {
       thumbnailUrl,
       postText: longBody || title,
       mediaUrls: thumbnailUrl ? [thumbnailUrl] : [],
-      engagement: nonEmptyEngagement({
-        score: post.score,
-        reply: post.num_comments,
-        upvoteRatio: post.upvote_ratio,
-        fetchedAt: new Date().toISOString(),
-      }),
     };
   } catch {
     return {};
@@ -1008,10 +936,6 @@ type BlueskyPost = {
   author?: { handle?: string; displayName?: string };
   record?: { text?: string; createdAt?: string };
   embed?: BlueskyEmbed;
-  likeCount?: number;
-  repostCount?: number;
-  replyCount?: number;
-  quoteCount?: number;
 };
 
 function extractBlueskyImages(embed: BlueskyEmbed | undefined): string[] {
@@ -1096,13 +1020,6 @@ async function fetchBlueskyMetadata(url: URL): Promise<PlatformMetadata> {
       thumbnailUrl,
       postText: text,
       mediaUrls: images,
-      engagement: nonEmptyEngagement({
-        like: post.likeCount,
-        repost: post.repostCount,
-        reply: post.replyCount,
-        quote: post.quoteCount,
-        fetchedAt: new Date().toISOString(),
-      }),
     };
   } catch {
     return {};
@@ -1173,7 +1090,6 @@ async function fetchPlatformFallbackMetadata(
     publishedAt: metadata.publishedAt,
     postText: metadata.postText,
     mediaUrls: metadata.mediaUrls || [],
-    engagement: metadata.engagement,
     domain: url.hostname.replace(/^www\./, ""),
     sourcePlatform,
   };
@@ -1332,10 +1248,6 @@ export async function fetchUrlMetadata(rawUrl: string) {
             : thumbnailUrl
               ? [thumbnailUrl]
               : [],
-      engagement:
-        enrichedContent?.engagement ??
-        youTubeMetadata?.engagement ??
-        platformMetadata.engagement,
       ...(enrichedContent
         ? {
             ...enrichedContent,

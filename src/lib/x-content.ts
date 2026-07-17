@@ -1,5 +1,4 @@
 import * as cheerio from "cheerio";
-import { nonEmptyEngagement, type EngagementMetrics } from "@/lib/engagement";
 
 type XUser = {
   id: string;
@@ -56,7 +55,6 @@ export type EnrichedPostContent = {
   authorName?: string;
   publishedAt?: Date;
   contentFetchedAt: Date;
-  engagement?: EngagementMetrics;
 };
 
 export function getXPostId(rawUrl: string) {
@@ -153,17 +151,6 @@ async function fetchFromXApi(
     authorName: formatAuthor(author),
     publishedAt: parseDate(post.created_at),
     contentFetchedAt: new Date(),
-    engagement: post.public_metrics
-      ? nonEmptyEngagement({
-          impression: post.public_metrics.impression_count,
-          like: post.public_metrics.like_count,
-          repost: post.public_metrics.retweet_count,
-          reply: post.public_metrics.reply_count,
-          quote: post.public_metrics.quote_count,
-          bookmark: post.public_metrics.bookmark_count,
-          fetchedAt: new Date().toISOString(),
-        })
-      : undefined,
   };
 }
 

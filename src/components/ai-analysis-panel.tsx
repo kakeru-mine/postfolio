@@ -4,33 +4,28 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
-  BarChart3,
+  Lightbulb,
   LoaderCircle,
   RefreshCw,
   Sparkles,
   TrendingUp,
 } from "lucide-react";
-import type { SourcePlatform } from "@prisma/client";
 import { ManualHelpButton } from "@/components/manual-help-button";
-import { engagementRows, type EngagementMetrics } from "@/lib/engagement";
 
 type Analysis = {
   summary: string | null;
   rating: "S" | "A" | "B" | "C" | "D" | "E" | null;
   growthReason: string | null;
+  contentAngles: string[];
   reuseSuggestion: string | null;
 };
 
 export function AiAnalysisPanel({
   itemId,
-  platform,
-  engagement,
   initialAnalysis,
   leadingAction,
 }: {
   itemId: string;
-  platform: SourcePlatform;
-  engagement: EngagementMetrics | null;
   initialAnalysis: Analysis;
   leadingAction?: React.ReactNode;
 }) {
@@ -43,9 +38,9 @@ export function AiAnalysisPanel({
     analysis.summary ||
       analysis.rating ||
       analysis.growthReason ||
+      analysis.contentAngles.length ||
       analysis.reuseSuggestion,
   );
-  const metricRows = engagementRows(platform, engagement);
 
   async function analyze() {
     setAnalyzing(true);
@@ -118,28 +113,6 @@ export function AiAnalysisPanel({
         </div>
       ) : null}
 
-      {metricRows.length ? (
-        <section className="mt-6">
-          <SectionTitle
-            icon={<BarChart3 size={16} />}
-            label="反応指標（保存時点）"
-          />
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {metricRows.map((row) => (
-              <div
-                key={row.label}
-                className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3"
-              >
-                <div className="text-xs text-slate-400">{row.label}</div>
-                <div className="mt-1 text-xl font-bold tabular-nums text-slate-700">
-                  {row.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
       {hasAnalysis ? (
         <div className="mt-6 space-y-6">
           <h3 className="text-base font-bold text-[var(--ink)]">分析結果</h3>
@@ -151,9 +124,19 @@ export function AiAnalysisPanel({
             </section>
           ) : null}
 
-          {analysis.growthReason || analysis.reuseSuggestion ? (
+          {analysis.contentAngles.length ||
+          analysis.growthReason ||
+          analysis.reuseSuggestion ? (
             <section>
               <div className="mt-4 space-y-5">
+                {analysis.contentAngles.length ? (
+                  <AnalysisList
+                    icon={<Lightbulb size={16} />}
+                    title="コンテンツの切り口"
+                    items={analysis.contentAngles}
+                  />
+                ) : null}
+
                 {analysis.growthReason ? (
                   <div className="overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-[#fffaf0] via-white to-[#f5f1ff]">
                     <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-start">
@@ -209,7 +192,7 @@ export function AiAnalysisPanel({
             まだ分析されていません
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-500">
-            投稿概要、E〜S段階の投稿評価、再利用アイデアを生成します。
+            投稿概要、コンテンツの切り口、E〜S段階の投稿評価を生成します。
           </p>
         </div>
       )}
@@ -317,3 +300,26 @@ function splitReuseIdeas(value: string) {
   return ideas.length ? ideas : splitSentences(value);
 }
 
+function AnalysisList({
+  icon,
+  title,
+  items,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  items: string[];
+}) {
+  return (
+    <section className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
+      <SectionTitle icon={icon} label={title} />
+      <ul className="mt-3 space-y-2.5">
+        {items.map((item) => (
+          <li key={item} className="flex gap-2 text-sm leading-6 text-slate-600">
+            <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
+            {item}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

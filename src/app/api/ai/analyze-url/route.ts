@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
         aiTags: [],
         aiUseCases: [analysis.reuseSuggestion],
         aiGrowthReason: analysis.growthReason,
+        aiContentAngles: analysis.contentAngles,
       },
     });
     await updateSavedItemAiRating(item.id, analysis.rating);
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
         summary: updatedItem.aiSummary,
         rating: analysis.rating,
         growthReason: updatedItem.aiGrowthReason,
+        contentAngles: updatedItem.aiContentAngles,
         reuseSuggestion: updatedItem.aiUseCases[0] ?? null,
       },
       usage: {
