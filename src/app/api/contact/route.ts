@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const fallbackContactEmail = "minesiba0888@gmail.com";
+const fallbackContactEmail = "postfolio0888@gmail.com";
 const maxAttachmentCount = 3;
 const maxFileBytes = 5 * 1024 * 1024;
 const maxTotalBytes = 10 * 1024 * 1024;

@@ -15,7 +15,7 @@ export default function CommercialTransactionsPage() {
     process.env.LEGAL_SELLER_PHONE ||
     "請求があった場合、遅滞なく開示します。";
   const contact =
-    process.env.LEGAL_CONTACT_EMAIL || "minesiba0888@gmail.com";
+    process.env.LEGAL_CONTACT_EMAIL || "postfolio0888@gmail.com";
 
   return (
     <main className="mx-auto max-w-4xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">

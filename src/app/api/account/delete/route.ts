@@ -65,7 +65,7 @@ async function sendAccountDeletedEmail({
   const contactEmail =
     process.env.CONTACT_TO_EMAIL ??
     process.env.LEGAL_CONTACT_EMAIL ??
-    "minesiba0888@gmail.com";
+    "postfolio0888@gmail.com";
   const displayName = name || email;
   const text = [
     `${displayName} 様`,
