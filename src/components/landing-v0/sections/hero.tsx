@@ -2,7 +2,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { AiAnalysisMock } from "@/components/landing-v0/mock/ai-analysis-mock";
 import { LibraryMock } from "@/components/landing-v0/mock/library-mock";
 
-const snsList = ["X", "Instagram", "Threads", "YouTube", "note", "Substack", "TikTok"];
+const snsList = ["X", "Instagram", "Threads", "YouTube", "note", "Substack", "TikTok", "Bluesky", "Pinterest"];
 
 export function Hero({ primaryHref }: { primaryHref: string }) {
   return (
