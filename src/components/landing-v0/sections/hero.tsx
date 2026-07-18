@@ -95,13 +95,13 @@ export function Hero({ primaryHref }: { primaryHref: string }) {
           </div>
 
           <div
-            className="lp-fade-up bg-brand-gradient mx-auto mt-8 max-w-5xl rounded-3xl border border-white/30 px-5 py-4 shadow-xl shadow-brand/20"
+            className="lp-fade-up bg-brand-gradient mx-auto mt-8 max-w-2xl rounded-3xl border border-white/30 px-6 py-5 shadow-xl shadow-brand/20"
             style={{ animationDelay: "450ms" }}
           >
             <p className="text-center text-sm font-extrabold uppercase tracking-[0.18em] text-white">
               幅広いSNSに対応
             </p>
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            <div className="mx-auto mt-3 flex max-w-lg flex-wrap items-center justify-center gap-2">
               {snsList.map((s) => (
                 <span
                   key={s}
