@@ -24,7 +24,6 @@ export const supportedPlatforms = [
   "NOTE",
   "SUBSTACK",
   "TIKTOK",
-  "REDDIT",
   "BLUESKY",
   "PINTEREST",
 ] as const satisfies readonly SourcePlatform[];
