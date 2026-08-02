@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { createSession } from "@/lib/auth";
+import { sendNewUserAdminNotification } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { canonicalAppUrl } from "@/lib/stripe";
 
@@ -93,6 +94,23 @@ export async function GET(request: NextRequest) {
         },
       });
       userId = created.id;
+
+      // Notify the operator of the new signup (Google is a signup channel too).
+      // Non-blocking so a notification failure never breaks sign-in.
+      try {
+        const totalRows = await prisma.$queryRaw<Array<{ count: bigint }>>`
+          SELECT COUNT(*)::bigint AS "count"
+          FROM "User"
+          WHERE "passwordHash" IS NOT NULL OR "emailVerifiedAt" IS NOT NULL
+        `;
+        await sendNewUserAdminNotification({
+          email,
+          name: created.name,
+          totalUsers: Number(totalRows[0]?.count ?? 0),
+        });
+      } catch (notifyError) {
+        console.error("Failed to send new-user admin notification", notifyError);
+      }
     }
 
     // Clear the CSRF cookie, then issue the session (sets the session cookie via

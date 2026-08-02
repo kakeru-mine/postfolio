@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       const totalRows = await prisma.$queryRaw<Array<{ count: bigint }>>`
         SELECT COUNT(*)::bigint AS "count"
         FROM "User"
-        WHERE "passwordHash" IS NOT NULL
+        WHERE "passwordHash" IS NOT NULL OR "emailVerifiedAt" IS NOT NULL
       `;
       await sendNewUserAdminNotification({
         email,

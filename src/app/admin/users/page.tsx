@@ -14,9 +14,15 @@ export default async function AdminUsersPage() {
     notFound();
   }
 
-  // Only accounts that actually completed registration (passwordHash set).
+  // Accounts that actually completed registration — via password (passwordHash
+  // set) or Google (emailVerifiedAt set). Excludes the unclaimed demo row.
   const users = await prisma.user.findMany({
-    where: { passwordHash: { not: null } },
+    where: {
+      OR: [
+        { passwordHash: { not: null } },
+        { emailVerifiedAt: { not: null } },
+      ],
+    },
     select: {
       id: true,
       name: true,
