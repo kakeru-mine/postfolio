@@ -2,7 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
 
-export function AuthPage({ mode }: { mode: "login" | "register" }) {
+export function AuthPage({
+  mode,
+  error,
+}: {
+  mode: "login" | "register";
+  error?: string;
+}) {
   const registering = mode === "register";
 
   return (
@@ -22,6 +28,11 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
           <h1 className="text-center text-2xl font-bold">
             {registering ? "会員登録" : "ログイン"}
           </h1>
+          {error ? (
+            <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+              {error}
+            </p>
+          ) : null}
           <AuthForm mode={mode} />
         </section>
       </div>
