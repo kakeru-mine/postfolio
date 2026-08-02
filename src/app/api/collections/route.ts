@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/user";
+import { requireApiUser } from "@/lib/auth";
 import { collectionSchema } from "@/lib/validation";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const collections = await prisma.collection.findMany({
       where: { userId: user.id },
       include: { _count: { select: { items: true } } },
@@ -20,7 +20,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const input = collectionSchema.parse(await request.json());
     const collection = await prisma.collection.create({
       data: {

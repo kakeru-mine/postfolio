@@ -1,16 +1,15 @@
-import { NextResponse } from "next/server";
-import { deleteCurrentSession } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { deleteCurrentSession, requireApiUser } from "@/lib/auth";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { cleanupOrphanedImages } from "@/lib/saved-item-cleanup";
-import { getCurrentUser } from "@/lib/user";
 
 // Removing re-hosted images for every saved item can take a while.
 export const maxDuration = 60;
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const hasActivePaidSubscription =
       user.plan !== "FREE" &&
       Boolean(user.stripeSubscriptionId);

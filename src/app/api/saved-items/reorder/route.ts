@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/user";
+import { requireApiUser } from "@/lib/auth";
 
 const reorderSchema = z.object({
   itemIds: z.array(z.string().cuid()).min(1).max(500),
@@ -10,7 +10,7 @@ const reorderSchema = z.object({
 
 export async function PATCH(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const { itemIds } = reorderSchema.parse(await request.json());
     const uniqueIds = [...new Set(itemIds)];
 

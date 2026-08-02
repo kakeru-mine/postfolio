@@ -8,7 +8,7 @@ import {
 } from "@/lib/openai";
 import { prisma } from "@/lib/prisma";
 import { platformLabel } from "@/lib/platform";
-import { getCurrentUser } from "@/lib/user";
+import { requireApiUser } from "@/lib/auth";
 import { apiError } from "@/lib/http";
 import { updateSavedItemAiRating } from "@/lib/saved-item-ai-rating";
 import {
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     | undefined;
 
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const { itemId } = requestSchema.parse(await request.json());
     const item = await prisma.savedItem.findFirst({
       where: { id: itemId, userId: user.id },

@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/user";
+import { requireApiUser } from "@/lib/auth";
 import { collectionSchema } from "@/lib/validation";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: NextRequest, context: Context) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const { id } = await context.params;
     const input = collectionSchema.parse(await request.json());
     const exists = await prisma.collection.findFirst({
@@ -36,9 +36,9 @@ export async function PATCH(request: NextRequest, context: Context) {
   }
 }
 
-export async function DELETE(_: NextRequest, context: Context) {
+export async function DELETE(request: NextRequest, context: Context) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const { id } = await context.params;
     const result = await prisma.collection.deleteMany({
       where: { id, userId: user.id },

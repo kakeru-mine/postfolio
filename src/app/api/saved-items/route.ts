@@ -9,7 +9,7 @@ import {
   isSupportedPlatform,
   parseSupportedPlatform,
 } from "@/lib/platform";
-import { getCurrentUser } from "@/lib/user";
+import { requireApiUser } from "@/lib/auth";
 import { normalizeUrl } from "@/lib/utils";
 import { savedItemCreateSchema } from "@/lib/validation";
 import { updateSavedItemPublishedAt } from "@/lib/saved-item-published-at";
@@ -21,7 +21,7 @@ export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const params = request.nextUrl.searchParams;
     const q = params.get("q")?.trim();
     const rawPlatform = params.get("platform");
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const input = savedItemCreateSchema.parse(await request.json());
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     await assertCanSaveItem(user);
     const normalizedUrl = normalizeUrl(input.url);
     const parsedUrl = new URL(normalizedUrl);

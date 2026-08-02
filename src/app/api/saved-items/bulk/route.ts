@@ -4,7 +4,7 @@ import { z } from "zod";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { cleanupOrphanedImages } from "@/lib/saved-item-cleanup";
-import { getCurrentUser } from "@/lib/user";
+import { requireApiUser } from "@/lib/auth";
 
 const itemIdsSchema = z.array(z.string().min(1)).min(1).max(100);
 
@@ -27,7 +27,7 @@ const bulkActionSchema = z.discriminatedUnion("action", [
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const input = bulkActionSchema.parse(await request.json());
     const itemIds = [...new Set(input.itemIds)];
     const items = await prisma.savedItem.findMany({

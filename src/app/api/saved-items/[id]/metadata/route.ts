@@ -5,7 +5,7 @@ import { fetchUrlMetadata } from "@/lib/metadata";
 import { prisma } from "@/lib/prisma";
 import { updateSavedItemPublishedAt } from "@/lib/saved-item-published-at";
 import { ensureSystemCa } from "@/lib/system-ca";
-import { getCurrentUser } from "@/lib/user";
+import { requireApiUser } from "@/lib/auth";
 
 // Re-fetching metadata downloads and re-hosts CDN images, which can exceed the
 // platform's default function timeout.
@@ -13,10 +13,10 @@ export const maxDuration = 60;
 
 type Context = { params: Promise<{ id: string }> };
 
-export async function PATCH(_: NextRequest, context: Context) {
+export async function PATCH(request: NextRequest, context: Context) {
   try {
     ensureSystemCa();
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const { id } = await context.params;
     const item = await prisma.savedItem.findFirst({
       where: { id, userId: user.id },

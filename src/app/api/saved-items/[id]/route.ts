@@ -3,14 +3,14 @@ import { revalidatePath } from "next/cache";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { cleanupOrphanedImages } from "@/lib/saved-item-cleanup";
-import { getCurrentUser } from "@/lib/user";
+import { requireApiUser } from "@/lib/auth";
 import { savedItemUpdateSchema } from "@/lib/validation";
 
 type Context = { params: Promise<{ id: string }> };
 
-export async function GET(_: NextRequest, context: Context) {
+export async function GET(request: NextRequest, context: Context) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const { id } = await context.params;
     const item = await prisma.savedItem.findFirst({
       where: { id, userId: user.id },
@@ -29,7 +29,7 @@ export async function GET(_: NextRequest, context: Context) {
 
 export async function PATCH(request: NextRequest, context: Context) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const { id } = await context.params;
     const input = savedItemUpdateSchema.parse(await request.json());
 
@@ -70,9 +70,9 @@ export async function PATCH(request: NextRequest, context: Context) {
   }
 }
 
-export async function DELETE(_: NextRequest, context: Context) {
+export async function DELETE(request: NextRequest, context: Context) {
   try {
-    const user = await getCurrentUser();
+    const user = await requireApiUser(request);
     const { id } = await context.params;
     const item = await prisma.savedItem.findFirst({
       where: { id, userId: user.id },
