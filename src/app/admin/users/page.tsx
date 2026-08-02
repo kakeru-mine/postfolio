@@ -27,6 +27,7 @@ export default async function AdminUsersPage() {
       id: true,
       name: true,
       email: true,
+      passwordHash: true,
       emailVerifiedAt: true,
       lastLoginAt: true,
       plan: true,
@@ -50,6 +51,8 @@ export default async function AdminUsersPage() {
     id: u.id,
     name: u.name,
     email: u.email,
+    // Google users have no passwordHash; password sign-ups always set one.
+    signupMethod: u.passwordHash ? ("password" as const) : ("google" as const),
     verified: Boolean(u.emailVerifiedAt),
     planLabel: getPlanDefinition(u.plan).name,
     isPaid: u.plan !== "FREE",

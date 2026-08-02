@@ -7,6 +7,7 @@ type UserRow = {
   id: string;
   name: string | null;
   email: string;
+  signupMethod: "password" | "google";
   verified: boolean;
   planLabel: string;
   isPaid: boolean;
@@ -25,6 +26,11 @@ type Summary = {
 
 const PAGE_SIZE = 25;
 
+const SIGNUP_METHOD_LABEL: Record<UserRow["signupMethod"], string> = {
+  password: "パスワード",
+  google: "Google",
+};
+
 function formatDateTime(value: string) {
   const date = new Date(value);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -37,6 +43,7 @@ function buildCsv(rows: UserRow[]) {
   const header = [
     "表示名",
     "メールアドレス",
+    "登録方法",
     "メール確認",
     "プラン",
     "サブスクステータス",
@@ -49,6 +56,7 @@ function buildCsv(rows: UserRow[]) {
     [
       row.name ?? "",
       row.email,
+      SIGNUP_METHOD_LABEL[row.signupMethod],
       row.verified ? "確認済" : "未確認",
       row.planLabel,
       row.subscriptionStatus ?? "",
@@ -150,6 +158,7 @@ export function AdminUserList({
             <tr className="border-b border-[var(--line)] text-xs text-slate-500">
               <th className="px-4 py-3 font-bold">表示名</th>
               <th className="px-4 py-3 font-bold">メールアドレス</th>
+              <th className="px-4 py-3 font-bold">登録方法</th>
               <th className="px-4 py-3 font-bold">メール確認</th>
               <th className="px-4 py-3 font-bold">プラン</th>
               <th className="px-4 py-3 text-right font-bold">保存件数</th>
@@ -168,6 +177,17 @@ export function AdminUserList({
                     {user.name ?? "（未設定）"}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{user.email}</td>
+                  <td className="px-4 py-3">
+                    {user.signupMethod === "google" ? (
+                      <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-700">
+                        Google
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">
+                        パスワード
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     {user.verified ? (
                       <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
@@ -213,7 +233,7 @@ export function AdminUserList({
             ) : (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-4 py-8 text-center text-sm text-slate-400"
                 >
                   該当する登録者がいません。
