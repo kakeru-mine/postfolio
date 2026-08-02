@@ -205,7 +205,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         <Link href="/privacy" className="underline hover:text-slate-600">
           プライバシーポリシー
         </Link>
-        に同意したものとみなします。
+        に
+        <br />
+        同意したものとみなします。
       </p>
     </form>
   );
