@@ -175,6 +175,18 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         Googleで続ける
       </a>
 
+      <p className="text-center text-xs leading-5 text-slate-400">
+        続行することで、
+        <Link href="/terms" className="underline hover:text-slate-600">
+          利用規約
+        </Link>
+        ・
+        <Link href="/privacy" className="underline hover:text-slate-600">
+          プライバシーポリシー
+        </Link>
+        に同意したものとみなします。
+      </p>
+
       {!registering ? (
         <p className="text-center text-sm">
           <Link
