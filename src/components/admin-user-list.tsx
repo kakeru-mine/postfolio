@@ -153,12 +153,12 @@ export function AdminUserList({
       </div>
 
       <div className="card overflow-x-auto">
-        <table className="w-full min-w-[860px] border-collapse text-left text-sm">
+        <table className="w-full min-w-[940px] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--line)] text-xs text-slate-500">
               <th className="px-4 py-3 font-bold">表示名</th>
               <th className="px-4 py-3 font-bold">メールアドレス</th>
-              <th className="px-4 py-3 font-bold">登録方法</th>
+              <th className="whitespace-nowrap px-4 py-3 font-bold">登録方法</th>
               <th className="px-4 py-3 font-bold">メール確認</th>
               <th className="px-4 py-3 font-bold">プラン</th>
               <th className="px-4 py-3 text-right font-bold">保存件数</th>
@@ -177,7 +177,7 @@ export function AdminUserList({
                     {user.name ?? "（未設定）"}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{user.email}</td>
-                  <td className="px-4 py-3">
+                  <td className="whitespace-nowrap px-4 py-3">
                     {user.signupMethod === "google" ? (
                       <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-700">
                         Google
