@@ -161,6 +161,27 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             : "ログイン"}
       </button>
 
+      {!registering ? (
+        <p className="text-center text-sm">
+          <Link
+            href="/forgot-password"
+            className="font-bold text-[var(--primary)]"
+          >
+            パスワードをお忘れですか？
+          </Link>
+        </p>
+      ) : null}
+
+      <p className="text-center text-sm text-slate-500">
+        {registering ? "すでにアカウントをお持ちですか？" : "アカウントをお持ちでないですか？"}
+        <Link
+          href={registering ? "/login" : "/register"}
+          className="ml-2 font-bold text-[var(--primary)]"
+        >
+          {registering ? "ログイン" : "会員登録"}
+        </Link>
+      </p>
+
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-slate-200" />
         <span className="text-xs text-slate-400">または</span>
@@ -185,27 +206,6 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           プライバシーポリシー
         </Link>
         に同意したものとみなします。
-      </p>
-
-      {!registering ? (
-        <p className="text-center text-sm">
-          <Link
-            href="/forgot-password"
-            className="font-bold text-[var(--primary)]"
-          >
-            パスワードをお忘れですか？
-          </Link>
-        </p>
-      ) : null}
-
-      <p className="text-center text-sm text-slate-500">
-        {registering ? "すでにアカウントをお持ちですか？" : "アカウントをお持ちでないですか？"}
-        <Link
-          href={registering ? "/login" : "/register"}
-          className="ml-2 font-bold text-[var(--primary)]"
-        >
-          {registering ? "ログイン" : "会員登録"}
-        </Link>
       </p>
     </form>
   );
