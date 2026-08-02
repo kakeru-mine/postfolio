@@ -80,7 +80,13 @@ export async function clearFailedLogins(userId: string) {
   });
 }
 
-export async function createSession(userId: string) {
+/**
+ * Mints a session token, persists it, and stamps the last-login time — but does
+ * NOT set a cookie. This is the shared chokepoint for every sign-in. Web callers
+ * use {@link createSession} (cookie); mobile/API callers take the returned token
+ * and deliver it in the response body for `Authorization: Bearer` use.
+ */
+export async function issueSessionToken(userId: string) {
   const token = randomBytes(32).toString("base64url");
   const tokenHash = hashSessionToken(token);
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
@@ -90,11 +96,16 @@ export async function createSession(userId: string) {
     VALUES (${randomUUID()}, ${tokenHash}, ${userId}, ${expiresAt}, NOW())
   `;
 
-  // Track last login for the admin user list. createSession is the single
-  // chokepoint for every sign-in, so updating it here covers all paths.
+  // Track last login for the admin user list. Every sign-in flows through here.
   await prisma.$executeRaw`
     UPDATE "User" SET "lastLoginAt" = NOW() WHERE "id" = ${userId}
   `;
+
+  return { token, expiresAt };
+}
+
+export async function createSession(userId: string) {
+  const { token, expiresAt } = await issueSessionToken(userId);
 
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
@@ -118,11 +129,11 @@ export async function deleteCurrentSession() {
   cookieStore.delete(SESSION_COOKIE);
 }
 
-export const getAuthenticatedUser = cache(async function getAuthenticatedUser() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!token) return null;
-
+/**
+ * Resolves a raw session token (from a cookie or an Authorization header) to its
+ * user, deleting the row and returning null if the session has expired.
+ */
+async function resolveUserFromToken(token: string): Promise<User | null> {
   const sessions = await prisma.$queryRaw<
     Array<{ sessionId: string; expiresAt: Date } & User>
   >`
@@ -169,7 +180,49 @@ export const getAuthenticatedUser = cache(async function getAuthenticatedUser() 
   void _;
   void __;
   return user;
+}
+
+export const getAuthenticatedUser = cache(async function getAuthenticatedUser() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+  if (!token) return null;
+  return resolveUserFromToken(token);
 });
+
+/** Reads the bearer token from an `Authorization: Bearer <token>` header. */
+export function getBearerToken(request: Request): string | null {
+  const header =
+    request.headers.get("authorization") ??
+    request.headers.get("Authorization");
+  if (!header) return null;
+  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
+  return match ? match[1].trim() : null;
+}
+
+/**
+ * Authenticates an API request, accepting either an `Authorization: Bearer`
+ * token (mobile clients) or the session cookie (web). The same endpoints can
+ * therefore serve both. Throws {@link AuthenticationError} when unauthenticated.
+ */
+export async function requireApiUser(request: Request): Promise<User> {
+  const bearer = getBearerToken(request);
+  if (bearer) {
+    const user = await resolveUserFromToken(bearer);
+    if (!user) throw new AuthenticationError();
+    return user;
+  }
+  const user = await getAuthenticatedUser();
+  if (!user) throw new AuthenticationError();
+  return user;
+}
+
+/** Revokes a session by its raw token (mobile logout). */
+export async function deleteSessionByToken(token: string) {
+  await prisma.$executeRaw`
+    DELETE FROM "Session"
+    WHERE "tokenHash" = ${hashSessionToken(token)}
+  `;
+}
 
 function hashSessionToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
