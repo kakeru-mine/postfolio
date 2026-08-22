@@ -212,12 +212,12 @@ function shouldRetryWithoutImages(response: Response, result: OpenAiResponse) {
       "image",
       "input_image",
       "invalid image",
-      "failed to download",
-      "could not download",
+      "download",
       "unsupported image",
       "forbidden",
       "access denied",
       "403",
+      "404",
     ].some((keyword) => message.includes(keyword))
   );
 }
