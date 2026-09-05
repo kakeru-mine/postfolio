@@ -7,8 +7,6 @@ import { getUserTheme } from "@/lib/user-theme";
 export default async function SettingsPage() {
   const user = await requirePageUser();
   const theme = await getUserTheme(user.id);
-  const hasActivePaidSubscription =
-    user.plan !== "FREE" && Boolean(user.stripeSubscriptionId);
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
@@ -19,9 +17,7 @@ export default async function SettingsPage() {
       />
 
       <ThemeSettings initialTheme={theme} />
-      <AccountDeleteSection
-        hasActivePaidSubscription={hasActivePaidSubscription}
-      />
+      <AccountDeleteSection />
     </div>
   );
 }

@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Download, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  AlertTriangle,
+  Download,
+  LoaderCircle,
+  Search,
+  Trash2,
+} from "lucide-react";
 
 type UserRow = {
   id: string;
@@ -78,8 +85,39 @@ export function AdminUserList({
   users: UserRow[];
   summary: Summary;
 }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const canDelete = confirmText === "DELETE";
+
+  async function handleDelete() {
+    if (!deleteTarget || !canDelete) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const response = await fetch("/api/admin/users/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: deleteTarget.id }),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setDeleteError(result.error ?? "削除に失敗しました。");
+        return;
+      }
+      setDeleteTarget(null);
+      setConfirmText("");
+      router.refresh();
+    } catch {
+      setDeleteError("削除に失敗しました。しばらくしてから再度お試しください。");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -164,6 +202,7 @@ export function AdminUserList({
               <th className="px-4 py-3 text-right font-bold">保存件数</th>
               <th className="px-4 py-3 font-bold">最終ログイン</th>
               <th className="px-4 py-3 font-bold">登録日時</th>
+              <th className="px-4 py-3 text-right font-bold">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -228,12 +267,27 @@ export function AdminUserList({
                   <td className="px-4 py-3 text-slate-500">
                     {formatDateTime(user.createdAt)}
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteError("");
+                        setConfirmText("");
+                        setDeleteTarget(user);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2.5 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-50"
+                      aria-label={`${user.email} を削除`}
+                    >
+                      <Trash2 size={14} />
+                      削除
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={9}
                   className="px-4 py-8 text-center text-sm text-slate-400"
                 >
                   該当する登録者がいません。
@@ -270,6 +324,70 @@ export function AdminUserList({
           </button>
         </div>
       </div>
+
+      {deleteTarget ? (
+        <div
+          className="theme-overlay fixed inset-0 z-50 grid place-items-center p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deleting) {
+              setDeleteTarget(null);
+            }
+          }}
+        >
+          <div
+            className="card w-full max-w-md p-6 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="grid size-12 place-items-center rounded-2xl bg-rose-50 text-rose-600">
+              <AlertTriangle size={23} />
+            </div>
+            <h3 className="mt-4 text-xl font-bold">アカウントを削除しますか？</h3>
+            <p className="mt-3 text-sm leading-7 text-slate-500">
+              <span className="font-bold text-slate-800">
+                {deleteTarget.name ? `${deleteTarget.name}（${deleteTarget.email}）` : deleteTarget.email}
+              </span>
+              <br />
+              保存投稿・コレクション・タグ・AI分析結果・設定と、再ホスト画像がすべて削除されます。この操作は元に戻せません。確認のため、下の入力欄に
+              <span className="font-bold text-slate-800"> DELETE </span>
+              と入力してください。
+            </p>
+            <input
+              className="field mt-4"
+              value={confirmText}
+              onChange={(event) => setConfirmText(event.target.value)}
+              placeholder="DELETE"
+              autoFocus
+            />
+            {deleteError ? (
+              <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+                {deleteError}
+              </p>
+            ) : null}
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                className="button-secondary justify-center"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-rose-700 disabled:opacity-50"
+                onClick={() => void handleDelete()}
+                disabled={!canDelete || deleting}
+              >
+                {deleting ? (
+                  <LoaderCircle className="animate-spin" size={17} />
+                ) : null}
+                {deleting ? "削除中..." : "完全に削除"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
