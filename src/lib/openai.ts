@@ -5,7 +5,9 @@ const analysisSchema = z.object({
   rating: z.enum(["S", "A", "B", "C", "D", "E"]),
   growthReason: z.string().min(1).max(800),
   contentAngles: z.array(z.string().min(1).max(160)).min(1).max(6),
-  reuseSuggestion: z.string().min(1).max(1200),
+  // When the rating is B or higher these are "what was good" points; when C or
+  // lower they are improvement/reflection points. 3-4 items per the prompt.
+  evaluationPoints: z.array(z.string().min(1).max(300)).min(1).max(6),
 });
 
 export type AiAnalysis = z.infer<typeof analysisSchema>;
@@ -36,10 +38,13 @@ const jsonSchema = {
       maxItems: 6,
       description: "記事やSNS投稿へ展開できる切り口",
     },
-    reuseSuggestion: {
-      type: "string",
+    evaluationPoints: {
+      type: "array",
+      items: { type: "string" },
+      minItems: 3,
+      maxItems: 4,
       description:
-        "再利用アイデアを3〜5個、箇条書き形式で具体的にまとめた日本語テキスト",
+        "投稿評価に基づく具体的なポイントを3〜4個。評価がB以上（S/A/B）なら良かった点（ここが良かった！）、C以下（C/D/E）なら改善点・反省点（こんな風にすれば良かったかも！）を、各ポイント1文程度の日本語で挙げる",
     },
   },
   required: [
@@ -47,7 +52,7 @@ const jsonSchema = {
     "rating",
     "growthReason",
     "contentAngles",
-    "reuseSuggestion",
+    "evaluationPoints",
   ],
 } as const;
 
@@ -101,13 +106,12 @@ export async function analyzeSavedItem(input: {
       "評価基準は、閲覧数、いいね数、再投稿数、コメント数、コメント内容、本文、画像、構成、分かりやすさ、共感性、独自性です。",
       "反応指標が取得できる場合は優先してください。不明な数値やコメントは推測しないでください。",
       "反応指標が不足する場合は、投稿本文、画像、構成、分かりやすさ、共感性、独自性を補助基準として評価してください。",
-      "growthReasonには、投稿の評価根拠を書いてください。高評価なら良かった点、低評価なら伸びにくい理由や改善点を中心に書いてください。",
-      "再利用観点はgrowthReasonやratingには入れず、reuseSuggestionだけに分けてください。",
-      "reuseSuggestionには「再利用するなら？」への回答として、具体的な再利用アイデアを3〜5個挙げてください。",
-      "reuseSuggestionは必ず箇条書きにしてください。各行は「・」から始めてください。",
-      "各アイデアは、何に使えるか、どう使うかが分かる具体的な内容にしてください。",
-      "アイデアを出す際は、次の4観点を踏まえてください。1. 再利用できるか。2. 再利用する価値はあるか。3. 再利用のアイデアが多く思いつくか。4. AI生成時の材料として使えるのか。",
-      "単なる評価コメントではなく、実際に使える案を優先してください。",
+      "growthReasonには、投稿の評価根拠を概要として書いてください。高評価なら良かった点、低評価なら伸びにくい理由や改善点を中心に書いてください。",
+      "evaluationPointsには、投稿の評価に基づく具体的なポイントを3〜4個、配列の要素として挙げてください。",
+      "評価がB以上（S/A/B）の場合は、この投稿の良かった点（ここが良かった！）を挙げてください。",
+      "評価がC以下（C/D/E）の場合は、改善点・反省点（こんな風にすれば良かったかも！）を挙げてください。",
+      "各ポイントは1文程度で、読者が具体的に理解・実践できる内容にしてください。抽象的な一言で終わらせないでください。",
+      "各ポイントの先頭に「・」や記号は付けず、文だけを配列要素として返してください。",
       `URL: ${input.url}`,
       `プラットフォーム: ${input.platform}`,
       `タイトル: ${input.title || "取得できていません"}`,
@@ -135,7 +139,7 @@ export async function analyzeSavedItem(input: {
             {
               role: "system",
               content:
-                "あなたは日本語のSNSマーケティング、コンテンツ企画、記事制作に詳しい編集者です。与えられた情報だけを根拠に、投稿そのものの評価と、別枠の再利用アイデアを作成してください。不明な数値やコメントは創作しないでください。",
+                "あなたは日本語のSNSマーケティング、コンテンツ企画、記事制作に詳しい編集者です。与えられた情報だけを根拠に、投稿そのものの評価と、その評価に基づく良かった点または改善点を作成してください。不明な数値やコメントは創作しないでください。",
             },
             {
               role: "user",

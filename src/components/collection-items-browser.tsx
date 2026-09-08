@@ -276,7 +276,7 @@ export function CollectionItemsBrowser({
               rating: selectedItem.aiRating,
               growthReason: selectedItem.aiGrowthReason,
               contentAngles: selectedItem.aiContentAngles,
-              reuseSuggestion: selectedItem.aiUseCases[0] ?? null,
+              evaluationPoints: selectedItem.aiUseCases,
             }}
           />
         </div>

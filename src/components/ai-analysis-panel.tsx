@@ -12,13 +12,17 @@ import {
 } from "lucide-react";
 import { ManualHelpButton } from "@/components/manual-help-button";
 
+type Rating = "S" | "A" | "B" | "C" | "D" | "E";
+
 type Analysis = {
   summary: string | null;
-  rating: "S" | "A" | "B" | "C" | "D" | "E" | null;
+  rating: Rating | null;
   growthReason: string | null;
   contentAngles: string[];
-  reuseSuggestion: string | null;
+  evaluationPoints: string[];
 };
+
+const GOOD_RATINGS: Rating[] = ["S", "A", "B"];
 
 export function AiAnalysisPanel({
   itemId,
@@ -39,8 +43,14 @@ export function AiAnalysisPanel({
       analysis.rating ||
       analysis.growthReason ||
       analysis.contentAngles.length ||
-      analysis.reuseSuggestion,
+      analysis.evaluationPoints.length,
   );
+  const pointsAreGood = analysis.rating
+    ? GOOD_RATINGS.includes(analysis.rating)
+    : true;
+  const pointsLabel = pointsAreGood
+    ? "ここが良かった！"
+    : "こんな風にすれば良かったかも！";
 
   async function analyze() {
     setAnalyzing(true);
@@ -126,7 +136,7 @@ export function AiAnalysisPanel({
 
           {analysis.contentAngles.length ||
           analysis.growthReason ||
-          analysis.reuseSuggestion ? (
+          analysis.evaluationPoints.length ? (
             <section>
               <div className="mt-4 space-y-5">
                 {analysis.contentAngles.length ? (
@@ -137,7 +147,7 @@ export function AiAnalysisPanel({
                   />
                 ) : null}
 
-                {analysis.growthReason ? (
+                {analysis.growthReason || analysis.evaluationPoints.length ? (
                   <div className="overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-[#fffaf0] via-white to-[#f5f1ff]">
                     <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-start">
                       {analysis.rating ? (
@@ -148,38 +158,37 @@ export function AiAnalysisPanel({
                           icon={<TrendingUp size={16} />}
                           label="投稿の評価"
                         />
-                        <div className="mt-3 space-y-2 text-sm leading-7 text-slate-600">
-                          {splitSentences(analysis.growthReason).map(
-                            (sentence, index) => (
-                              <p key={`${sentence}-${index}`}>{sentence}</p>
-                            ),
-                          )}
-                        </div>
+                        {analysis.growthReason ? (
+                          <div className="mt-3 space-y-2 text-sm leading-7 text-slate-600">
+                            {splitSentences(analysis.growthReason).map(
+                              (sentence, index) => (
+                                <p key={`${sentence}-${index}`}>{sentence}</p>
+                              ),
+                            )}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
-                  </div>
-                ) : null}
 
-                {analysis.reuseSuggestion ? (
-                  <section className="rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
-                    <SectionTitle
-                      icon={<Sparkles size={16} />}
-                      label="再利用するなら？"
-                    />
-                    <ul className="mt-3 space-y-2.5">
-                      {splitReuseIdeas(analysis.reuseSuggestion).map(
-                        (idea, index) => (
-                          <li
-                            key={`${idea}-${index}`}
-                            className="flex gap-2 text-sm leading-7 text-slate-600"
-                          >
-                            <span className="mt-3 size-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
-                            <span>{idea}</span>
-                          </li>
-                        ),
-                      )}
-                    </ul>
-                  </section>
+                    {analysis.evaluationPoints.length ? (
+                      <div className="border-t border-amber-100 px-5 pb-5 pt-4">
+                        <h4 className="text-sm font-bold text-[var(--primary-dark)]">
+                          {pointsLabel}
+                        </h4>
+                        <ul className="mt-3 space-y-2.5">
+                          {analysis.evaluationPoints.map((point, index) => (
+                            <li
+                              key={`${point}-${index}`}
+                              className="flex gap-2 text-sm leading-7 text-slate-600"
+                            >
+                              <span className="mt-3 size-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
+                              <span>{point}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
             </section>
@@ -289,15 +298,6 @@ function RatingBadge({ rating }: { rating: keyof typeof ratingStyles }) {
 function splitSentences(value: string) {
   const sentences = value.match(/[^。！？!?]+[。！？!?]?/g);
   return sentences?.map((sentence) => sentence.trim()).filter(Boolean) ?? [value];
-}
-
-function splitReuseIdeas(value: string) {
-  const ideas = value
-    .split(/\r?\n|(?:^|\s)[・\-*]\s*/g)
-    .map((idea) => idea.replace(/^[・\-*]\s*/, "").trim())
-    .filter(Boolean);
-
-  return ideas.length ? ideas : splitSentences(value);
 }
 
 function AnalysisList({

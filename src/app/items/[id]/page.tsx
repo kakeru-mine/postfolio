@@ -142,7 +142,7 @@ export default async function ItemDetail({
               rating: aiRating,
               growthReason: item.aiGrowthReason,
               contentAngles: item.aiContentAngles,
-              reuseSuggestion: item.aiUseCases[0] ?? null,
+              evaluationPoints: item.aiUseCases,
             }}
           />
         </section>

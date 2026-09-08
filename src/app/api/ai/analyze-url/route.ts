@@ -63,7 +63,9 @@ export async function POST(request: NextRequest) {
       data: {
         aiSummary: analysis.summary,
         aiTags: [],
-        aiUseCases: [analysis.reuseSuggestion],
+        // aiUseCases now stores the rating-based evaluation points (good points
+        // for B+ ratings, improvement points for C-), replacing reuse ideas.
+        aiUseCases: analysis.evaluationPoints,
         aiGrowthReason: analysis.growthReason,
         aiContentAngles: analysis.contentAngles,
       },
@@ -81,7 +83,7 @@ export async function POST(request: NextRequest) {
         rating: analysis.rating,
         growthReason: updatedItem.aiGrowthReason,
         contentAngles: updatedItem.aiContentAngles,
-        reuseSuggestion: updatedItem.aiUseCases[0] ?? null,
+        evaluationPoints: updatedItem.aiUseCases,
       },
       usage: {
         count: usage.count,
