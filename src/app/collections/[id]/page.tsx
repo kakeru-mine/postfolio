@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AddItemsToCollection } from "@/components/add-items-to-collection";
 import { CollectionItemsBrowser } from "@/components/collection-items-browser";
 import { prisma } from "@/lib/prisma";
 import { getSavedItemAiRatings } from "@/lib/saved-item-ai-rating";
@@ -49,20 +50,26 @@ export default async function CollectionDetailPage({
         <ArrowLeft size={17} />
         コレクション一覧へ
       </Link>
-      <div className="mt-6 flex items-start gap-3">
-        <span
-          className="mt-1 size-4 shrink-0 rounded-full"
-          style={{ backgroundColor: collection.color }}
-        />
-        <div>
-          <h1 className="text-2xl font-bold">{collection.name}</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            {collection.description || "登録された投稿を確認できます。"}
-          </p>
-          <p className="mt-2 text-xs font-bold text-slate-400">
-            {collection.items.length}件
-          </p>
+      <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <span
+            className="mt-1 size-4 shrink-0 rounded-full"
+            style={{ backgroundColor: collection.color }}
+          />
+          <div>
+            <h1 className="text-2xl font-bold">{collection.name}</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              {collection.description || "登録された投稿を確認できます。"}
+            </p>
+            <p className="mt-2 text-xs font-bold text-slate-400">
+              {collection.items.length}件
+            </p>
+          </div>
         </div>
+        <AddItemsToCollection
+          collectionId={collection.id}
+          collectionName={collection.name}
+        />
       </div>
       <div className="mt-7">
         <CollectionItemsBrowser

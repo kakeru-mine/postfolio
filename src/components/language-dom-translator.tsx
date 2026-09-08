@@ -257,6 +257,15 @@ const translations: Record<string, string> = {
   "保存": "Save",
   "コレクション一覧へ": "Back to Collections",
   "登録された投稿を確認できます。": "View posts registered in this collection.",
+  "投稿を追加": "Add posts",
+  "コレクションに追加": "Add to collection",
+  "追加する保存済みの投稿を選んでください。":
+    "Pick the saved posts you want to add.",
+  "追加できる投稿がありません。": "No posts available to add.",
+  "選択した投稿を追加": "Add selected posts",
+  "追加中...": "Adding...",
+  "追加に失敗しました。": "Failed to add.",
+  "閉じる": "Close",
   "現在の有料プランは契約期間の終了時にFreeへ切り替わる予定です。":
     "Your paid plan is scheduled to switch to Free at the end of the billing period.",
   "利用中": "In Use",
