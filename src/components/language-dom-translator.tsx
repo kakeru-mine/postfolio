@@ -258,6 +258,23 @@ const translations: Record<string, string> = {
   "コレクション一覧へ": "Back to Collections",
   "登録された投稿を確認できます。": "View posts registered in this collection.",
   "まとめて選択": "Bulk select",
+  // --- Onboarding (welcome guide + checklist) ---
+  "投稿を保存": "Save posts",
+  "「新規作成」からURLを貼り付けて、SNS投稿を保存できます。":
+    "Save social posts by pasting a URL from New.",
+  "整理する": "Organize",
+  "コレクションとタグで、投稿を目的別に整理できます。":
+    "Organize posts by purpose with collections and tags.",
+  "投稿概要・コンテンツの切り口・投稿の評価をAIが生成します。":
+    "AI generates a summary, content angles, and a post rating.",
+  "スキップ": "Skip",
+  "始める": "Get started",
+  "はじめかた": "Getting started",
+  "3ステップでPostfolioを使いこなしましょう。":
+    "Get the most out of Postfolio in three steps.",
+  "最初の投稿を保存する": "Save your first post",
+  "AI分析を試す": "Try AI analysis",
+  "コレクションを作成する": "Create a collection",
   "コレクションから外す": "Remove from collection",
   "外す": "Remove",
   "選択した投稿をコレクションから外しますか？":

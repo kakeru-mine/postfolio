@@ -13,6 +13,8 @@ import { AvatarUploader } from "@/components/avatar-uploader";
 import { ItemCard } from "@/components/item-card";
 import { LandingV0Page } from "@/components/landing-v0/landing-page";
 import { ManualHelpButton } from "@/components/manual-help-button";
+import { OnboardingChecklist } from "@/components/onboarding-checklist";
+import { OnboardingWelcome } from "@/components/onboarding-welcome";
 import { PageHeader } from "@/components/page-header";
 import { UsageMeter } from "@/components/usage-meter";
 import { prisma } from "@/lib/prisma";
@@ -26,7 +28,7 @@ export default async function Home() {
   if (!user) {
     return <LandingV0Page isLoggedIn={false} />;
   }
-  const [usage, recentItems] = await Promise.all([
+  const [usage, recentItems, collectionCount] = await Promise.all([
     getUsageSummary(user),
     prisma.savedItem.findMany({
       where: { userId: user.id },
@@ -34,6 +36,7 @@ export default async function Home() {
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
       take: 3,
     }),
+    prisma.collection.count({ where: { userId: user.id } }),
   ]);
   const hasPaidPlan = user.plan !== "FREE";
   const aiUsageLabel =
@@ -45,7 +48,14 @@ export default async function Home() {
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <OnboardingWelcome />
       <PageHeader eyebrow="Dashboard" title="ホーム" />
+
+      <OnboardingChecklist
+        savedDone={usage.savedItemCount > 0}
+        analyzeDone={usage.aiAnalysisCount > 0}
+        collectionDone={collectionCount > 0}
+      />
 
       <section className="mt-8 card p-6 sm:p-8">
         <div className="flex flex-col gap-6">
