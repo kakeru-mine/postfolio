@@ -133,8 +133,9 @@ export function BulkItemActions({
   return (
     <>
       <div className="sticky bottom-4 z-30 mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-[var(--primary)]/20 bg-white/95 p-3 shadow-xl backdrop-blur sm:flex sm:flex-wrap sm:items-center">
-        <p className="col-span-2 px-2 text-sm font-bold text-[var(--ink)] sm:mr-auto sm:px-2">
+        <p className="col-span-2 flex items-center gap-2 px-2 text-sm font-bold text-[var(--ink)] sm:mr-auto sm:px-2">
           {selectedItems.length}件を選択中
+          <span className="font-bold text-[var(--primary)]">まとめて選択</span>
         </p>
         <ActionButton icon={<Trash2 size={16} />} onClick={() => setDialog("delete")}>
           まとめて削除

@@ -128,7 +128,7 @@ export function AiAnalysisPanel({
           <h3 className="text-base font-bold text-[var(--ink)]">分析結果</h3>
 
           {analysis.summary ? (
-            <section>
+            <section className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
               <SectionTitle icon={<Sparkles size={16} />} label="投稿概要" />
               <p className="mt-2 leading-7 text-slate-600">{analysis.summary}</p>
             </section>
@@ -296,7 +296,9 @@ function RatingBadge({ rating }: { rating: keyof typeof ratingStyles }) {
 }
 
 function splitSentences(value: string) {
-  const sentences = value.match(/[^。！？!?]+[。！？!?]?/g);
+  // Break after each punctuation mark (読点・句点) so dense evaluation text reads
+  // as short lines instead of one long paragraph.
+  const sentences = value.match(/[^。！？!?、]+[。！？!?、]?/g);
   return sentences?.map((sentence) => sentence.trim()).filter(Boolean) ?? [value];
 }
 

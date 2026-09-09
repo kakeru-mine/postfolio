@@ -257,6 +257,7 @@ const translations: Record<string, string> = {
   "保存": "Save",
   "コレクション一覧へ": "Back to Collections",
   "登録された投稿を確認できます。": "View posts registered in this collection.",
+  "まとめて選択": "Bulk select",
   "投稿を追加": "Add posts",
   "コレクションに追加": "Add to collection",
   "追加する保存済みの投稿を選んでください。":
