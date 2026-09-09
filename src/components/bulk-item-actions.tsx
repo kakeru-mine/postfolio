@@ -2,6 +2,7 @@
 
 import {
   FolderInput,
+  FolderMinus,
   LoaderCircle,
   Sparkles,
   Tags,
@@ -16,16 +17,18 @@ type SelectedItem = {
   userTags: string[];
 };
 
-type Dialog = "delete" | "move" | "tag" | "analyze" | null;
+type Dialog = "delete" | "move" | "tag" | "analyze" | "remove" | null;
 
 export function BulkItemActions({
   selectedItems,
   collections,
   onComplete,
+  allowRemoveFromCollection = false,
 }: {
   selectedItems: SelectedItem[];
   collections: { id: string; name: string }[];
   onComplete: () => void;
+  allowRemoveFromCollection?: boolean;
 }) {
   const router = useRouter();
   const [dialog, setDialog] = useState<Dialog>(null);
@@ -53,19 +56,21 @@ export function BulkItemActions({
               .filter(Boolean)
           : [];
       const body =
-        dialog === "move"
-          ? {
-              action: "move",
-              itemIds,
-              collectionId: collectionId || null,
-            }
-          : dialog === "tag"
+        dialog === "remove"
+          ? { action: "move", itemIds, collectionId: null }
+          : dialog === "move"
             ? {
-                action: "tag",
+                action: "move",
                 itemIds,
-                tags: parsedTags,
+                collectionId: collectionId || null,
               }
-            : { action: "delete", itemIds };
+            : dialog === "tag"
+              ? {
+                  action: "tag",
+                  itemIds,
+                  tags: parsedTags,
+                }
+              : { action: "delete", itemIds };
 
       if (dialog === "tag" && parsedTags.length === 0) {
         setError("追加するタグを入力してください。");
@@ -154,6 +159,14 @@ export function BulkItemActions({
         <ActionButton icon={<Sparkles size={16} />} onClick={() => setDialog("analyze")}>
           まとめてAI分析
         </ActionButton>
+        {allowRemoveFromCollection ? (
+          <ActionButton
+            icon={<FolderMinus size={16} />}
+            onClick={() => setDialog("remove")}
+          >
+            コレクションから外す
+          </ActionButton>
+        ) : null}
         <button
           type="button"
           onClick={onComplete}
@@ -182,7 +195,9 @@ export function BulkItemActions({
                   ? "移動先を選択"
                   : dialog === "tag"
                     ? "タグをまとめて追加"
-                    : `${selectedItems.length}件をAI分析しますか？`}
+                    : dialog === "remove"
+                      ? "選択した投稿をコレクションから外しますか？"
+                      : `${selectedItems.length}件をAI分析しますか？`}
             </h3>
             <p className="mt-2 text-center text-sm leading-6 text-slate-500">
               {dialog === "delete"
@@ -191,7 +206,9 @@ export function BulkItemActions({
                   ? "選択した投稿のコレクションを一括変更します。"
                   : dialog === "tag"
                     ? "既存のタグは残したまま、新しいタグを追加します。"
-                    : (
+                    : dialog === "remove"
+                      ? "投稿は削除されず、未分類に戻ります。"
+                      : (
                         <>
                           <span className="block">
                             選択した投稿ごとにAI分析を実行します。
@@ -263,7 +280,13 @@ export function BulkItemActions({
                 disabled={processing}
               >
                 {processing ? <LoaderCircle className="animate-spin" size={17} /> : null}
-                {processing ? "処理中..." : dialog === "analyze" ? "AI分析を実行" : "実行する"}
+                {processing
+                  ? "処理中..."
+                  : dialog === "analyze"
+                    ? "AI分析を実行"
+                    : dialog === "remove"
+                      ? "外す"
+                      : "実行する"}
               </button>
             </div>
           </div>

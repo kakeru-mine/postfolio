@@ -258,6 +258,13 @@ const translations: Record<string, string> = {
   "コレクション一覧へ": "Back to Collections",
   "登録された投稿を確認できます。": "View posts registered in this collection.",
   "まとめて選択": "Bulk select",
+  "コレクションから外す": "Remove from collection",
+  "外す": "Remove",
+  "選択した投稿をコレクションから外しますか？":
+    "Remove the selected posts from the collection?",
+  "コレクションから外しますか？": "Remove from collection?",
+  "投稿は削除されず、未分類に戻ります。":
+    "The post is not deleted; it returns to Uncategorized.",
   "投稿を追加": "Add posts",
   "コレクションに追加": "Add to collection",
   "追加する保存済みの投稿を選んでください。":

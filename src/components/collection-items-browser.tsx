@@ -8,11 +8,13 @@ import {
   CalendarDays,
   Check,
   ExternalLink,
+  FolderMinus,
   Globe2,
   ImageIcon,
   LoaderCircle,
   Trash2,
   UserRound,
+  X,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -41,8 +43,42 @@ export function CollectionItemsBrowser({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [removeId, setRemoveId] = useState<string | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const [removeError, setRemoveError] = useState("");
   const selecting = selectedIds.size > 0;
   const selectedItem = items.find((item) => item.id === selectedId);
+  const removeItem = items.find((item) => item.id === removeId);
+
+  // Remove a single post from this collection (moves it to Uncategorized; the
+  // post itself is kept).
+  async function removeFromCollection() {
+    if (!removeId) return;
+    setRemoving(true);
+    setRemoveError("");
+    try {
+      const response = await fetch("/api/saved-items/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "move",
+          itemIds: [removeId],
+          collectionId: null,
+        }),
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        setRemoveError(result.error ?? "コレクションから外せませんでした。");
+        return;
+      }
+      setRemoveId(null);
+      router.refresh();
+    } catch {
+      setRemoveError("コレクションから外せませんでした。");
+    } finally {
+      setRemoving(false);
+    }
+  }
 
   function toggleSelection(itemId: string) {
     setSelectedIds((current) => {
@@ -136,6 +172,14 @@ export function CollectionItemsBrowser({
               >
                 <Check size={16} />
               </button>
+              <button
+                type="button"
+                onClick={() => setRemoveId(item.id)}
+                className="absolute top-2 right-2 z-10 grid size-7 place-items-center rounded-lg border border-white/80 bg-white/90 text-rose-500 shadow-sm backdrop-blur transition hover:bg-rose-500 hover:text-white sm:size-8"
+                aria-label="コレクションから外す"
+              >
+                <X size={16} />
+              </button>
             </div>
           );
         })}
@@ -144,6 +188,7 @@ export function CollectionItemsBrowser({
       <BulkItemActions
         selectedItems={items.filter((item) => selectedIds.has(item.id))}
         collections={collections}
+        allowRemoveFromCollection
         onComplete={() => {
           setSelectedIds(new Set());
           setSelectedId(null);
@@ -336,6 +381,62 @@ export function CollectionItemsBrowser({
                   <Trash2 size={17} />
                 )}
                 {deleting ? "削除中..." : "投稿を削除"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {removeId && removeItem ? (
+        <div
+          className="theme-overlay fixed inset-0 z-50 grid place-items-center p-4 backdrop-blur-sm"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !removing) {
+              setRemoveId(null);
+            }
+          }}
+        >
+          <div
+            className="card w-full max-w-md p-6 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--primary)]">
+              <FolderMinus size={22} />
+            </div>
+            <h3 className="mt-4 text-center text-lg font-bold">
+              コレクションから外しますか？
+            </h3>
+            <p className="mt-2 text-center text-sm leading-6 text-slate-500">
+              投稿は削除されず、未分類に戻ります。
+            </p>
+            {removeError ? (
+              <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+                {removeError}
+              </p>
+            ) : null}
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                className="button-secondary justify-center"
+                onClick={() => setRemoveId(null)}
+                disabled={removing}
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                className="button-primary justify-center disabled:opacity-60"
+                onClick={removeFromCollection}
+                disabled={removing}
+              >
+                {removing ? (
+                  <LoaderCircle className="animate-spin" size={17} />
+                ) : (
+                  <FolderMinus size={17} />
+                )}
+                {removing ? "処理中..." : "外す"}
               </button>
             </div>
           </div>
