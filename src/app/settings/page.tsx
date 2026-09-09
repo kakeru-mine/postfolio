@@ -11,7 +11,7 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-5xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        eyebrow="Settings"
+        eyebrow="App Settings"
         title="設定"
         description="カラー設定を変更できます。"
       />
