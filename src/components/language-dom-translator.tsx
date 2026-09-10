@@ -269,6 +269,7 @@ const translations: Record<string, string> = {
     "AI generates a summary, content angles, and a post rating.",
   "スキップ": "Skip",
   "始める": "Get started",
+  "戻る": "Back",
   "はじめかた": "Getting started",
   "3ステップでPostfolioを使いこなしましょう。":
     "Get the most out of Postfolio in three steps.",

@@ -76,24 +76,38 @@ export function OnboardingWelcome() {
 
         <div className="mt-6 flex items-center justify-center gap-2">
           {SLIDES.map((_, index) => (
-            <span
+            <button
               key={index}
+              type="button"
+              onClick={() => setStep(index)}
+              aria-label={`${index + 1}`}
               className={`h-1.5 rounded-full transition-all ${
                 index === step
                   ? "w-5 bg-[var(--primary)]"
-                  : "w-1.5 bg-slate-200"
+                  : "w-1.5 bg-slate-200 hover:bg-slate-300"
               }`}
             />
           ))}
         </div>
 
-        <button
-          type="button"
-          onClick={() => (isLast ? close() : setStep((s) => s + 1))}
-          className="button-primary mt-6 w-full justify-center"
-        >
-          {isLast ? "始める" : "次へ"}
-        </button>
+        <div className="mt-6 flex gap-3">
+          {step > 0 ? (
+            <button
+              type="button"
+              onClick={() => setStep((s) => s - 1)}
+              className="button-secondary justify-center px-6"
+            >
+              戻る
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => (isLast ? close() : setStep((s) => s + 1))}
+            className="button-primary flex-1 justify-center"
+          >
+            {isLast ? "始める" : "次へ"}
+          </button>
+        </div>
       </div>
     </div>
   );
