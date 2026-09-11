@@ -386,6 +386,96 @@ const translations: Record<string, string> = {
   "お問い合わせを送信しました。": "Your inquiry has been sent.",
   "送信に失敗しました。しばらくしてから再度お試しください。":
     "Failed to send. Please try again later.",
+
+  // --- Authenticated app: plans / billing ---
+  "プラン": "Plan",
+  "料金": "Pricing",
+  "プランについて": "About plans",
+  "プランを変更": "Change plan",
+  "有料プラン": "Paid plan",
+  "決済画面へ進む": "Go to checkout",
+  "決済ページを作成できませんでした。": "Couldn't create the checkout page.",
+  "決済サービスへ接続できませんでした。": "Couldn't connect to the payment service.",
+  "Stripeの決済画面で選択・確認します。":
+    "You'll choose and confirm on Stripe's checkout screen.",
+  "月単位で自動更新されます。": "Renews automatically each month.",
+  "月額500円（税込）": "500 yen / month (tax incl.)",
+  "月額980円（税込）": "980 yen / month (tax incl.)",
+  "保存枠200件、AI分析 月100件": "200 saved items, 100 AI analyses / month",
+  "保存枠500件、AI分析 月200件": "500 saved items, 200 AI analyses / month",
+  "期間終了時に解約予定": "Scheduled to cancel at the end of the period",
+  "変更予定": "Change scheduled",
+  "変更後": "After change",
+  "利用期限": "Access until",
+  "サブスクステータス": "Subscription status",
+  "支払い遅延": "Payment overdue",
+  "支払い手続き未完了": "Payment incomplete",
+  "一時停止中": "Paused",
+  "未払い": "Unpaid",
+  "すでにこのプランを利用しています。": "You're already on this plan.",
+  "Freeプランへ変更しますか？": "Change to the Free plan?",
+  "変更できる有料契約がありません。": "There's no paid contract to change.",
+  "取り消せる予約がありません。": "There's no scheduled change to cancel.",
+
+  // --- Authenticated app: settings / theme ---
+  "アクセントカラー": "Accent color",
+  "メインカラー": "Main color",
+  "サイドバー": "Sidebar",
+  "このカラーを保存": "Save this color",
+  "マニュアルの大きさを変更": "Resize the manual",
+  "テーマを保存できませんでした。": "Couldn't save the theme.",
+  "メール確認": "Email verification",
+  "メール確認済み": "Email verified",
+  "未確認": "Unverified",
+  "最終ログイン": "Last login",
+  "保存件数": "Saved count",
+  "今月の新規": "New this month",
+  "保存しました": "Saved",
+
+  // --- Authenticated app: AI analysis ---
+  "ここが良かった！": "What worked well",
+  "こんな風にすれば良かったかも！": "What could have been better",
+  "コンテンツの切り口": "Content angles",
+  "AI分析に失敗しました。": "AI analysis failed.",
+  "AI分析に接続できませんでした。": "Couldn't connect for AI analysis.",
+
+  // --- Authenticated app: library / detail / bulk actions ---
+  "並び替え": "Sort",
+  "新しい順": "Newest first",
+  "媒体": "Platform",
+  "投稿を選択": "Select posts",
+  "投稿の選択を切り替える": "Toggle post selection",
+  "タグをまとめて追加": "Add tags in bulk",
+  "SNSで絞り込む": "Filter by platform",
+  "SNS情報を再取得": "Refetch post info",
+  "SNS情報を取得できませんでした。": "Couldn't fetch the post info.",
+  "SNS情報の取得に接続できませんでした。":
+    "Couldn't connect to fetch the post info.",
+  "未分類": "Uncategorized",
+  "メモはまだありません": "No notes yet",
+  "削除する": "Delete",
+  "削除": "Delete",
+  "完全に削除": "Delete permanently",
+  "実行する": "Run",
+  "更新する": "Update",
+  "新規投稿": "New post",
+  "必要ならコレクションやタグも入力します。":
+    "Add a collection or tags if needed.",
+  "URL入力用のポップアップが表示されます。":
+    "A popup for entering the URL will appear.",
+  "例：企画, デザイン": "e.g. Planning, Design",
+
+  // --- Authenticated app: shared errors ---
+  "処理できませんでした。": "Couldn't process the request.",
+  "取得できませんでした": "Couldn't load",
+  "サーバーに接続できませんでした。": "Couldn't connect to the server.",
+  "一括操作に失敗しました。": "The bulk action failed.",
+  "一括操作に接続できませんでした。": "Couldn't connect for the bulk action.",
+  "コレクションから外せませんでした。": "Couldn't remove it from the collection.",
+  "コレクションが見つかりません。": "Collection not found.",
+  "保存アイテムが見つかりません。": "Saved item not found.",
+  "保存枠の上限に達しています。": "You've reached your saved-item limit.",
+  "権限がありません。": "You don't have permission.",
 };
 
 const reverseTranslations = Object.fromEntries(

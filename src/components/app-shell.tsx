@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 import { LegalReturnLink } from "@/components/legal-return-link";
 import { LogoutButton } from "@/components/logout-button";
+import {
+  LanguageSwitcher,
+  type AppLanguage,
+} from "@/components/language-switcher";
+import { LanguageDomTranslator } from "@/components/language-dom-translator";
 import { APP_VERSION } from "@/lib/version";
 
 const labels = {
@@ -26,6 +31,8 @@ const labels = {
     manual: "マニュアル",
     settings: "設定",
     news: "お知らせ",
+    newsAdmin: "お知らせ管理",
+    users: "登録者一覧",
     terms: "利用規約",
     privacy: "プライバシー",
     contact: "お問い合わせ",
@@ -45,6 +52,8 @@ const labels = {
     manual: "Manual",
     settings: "Settings",
     news: "News",
+    newsAdmin: "Manage news",
+    users: "Registered users",
     terms: "Terms",
     privacy: "Privacy",
     contact: "Contact",
@@ -71,10 +80,35 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  // The authenticated app is Japanese-only. English is offered on public pages
-  // (LP, legal, announcements, contact) via their own language controls, so the
-  // app shell no longer exposes a language switcher or DOM translation.
-  const t = labels.ja;
+  // The authenticated app supports Japanese and English. Chrome (this shell) is
+  // switched via `labels[language]`; the page content inside <main> is handled
+  // by the DOM translator mounted below.
+  const [language, setLanguage] = useState<AppLanguage>("ja");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("postfolio-language");
+    if (saved === "ja" || saved === "en") {
+      // An explicit past choice always wins.
+      setLanguage(saved);
+      document.documentElement.lang = saved;
+      return;
+    }
+    // First visit: default to the browser locale. Japanese browsers start in
+    // Japanese, everything else in English. Not persisted until the user picks.
+    const detected = (navigator.language || "").toLowerCase().startsWith("ja")
+      ? "ja"
+      : "en";
+    setLanguage(detected);
+    document.documentElement.lang = detected;
+  }, []);
+
+  function changeLanguage(next: AppLanguage) {
+    setLanguage(next);
+    window.localStorage.setItem("postfolio-language", next);
+    document.documentElement.lang = next;
+  }
+
+  const t = labels[language];
 
   if (
     // The root path renders the marketing LP for signed-out visitors, which
@@ -127,6 +161,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen">
+      <LanguageDomTranslator language={language} />
       <div className="sticky top-0 z-40 shadow-sm">
         <header
           className="border-b border-white/10 text-[var(--sidebar-foreground)]"
@@ -228,7 +263,7 @@ export function AppShell({
                       href="/admin/announcements"
                       onClick={() => setMenuOpen(false)}
                     >
-                      {t.news}管理
+                      {t.newsAdmin}
                     </Link>
                   ) : null}
                   {isAdmin ? (
@@ -236,7 +271,7 @@ export function AppShell({
                       href="/admin/users"
                       onClick={() => setMenuOpen(false)}
                     >
-                      登録者一覧
+                      {t.users}
                     </Link>
                   ) : null}
                   <LegalReturnLink href="/terms" onClick={() => setMenuOpen(false)}>
@@ -248,6 +283,16 @@ export function AppShell({
                   <Link href="/contact" onClick={() => setMenuOpen(false)}>
                     {t.contact}
                   </Link>
+                </div>
+                <div className="mt-3">
+                  <LanguageSwitcher
+                    language={language}
+                    onChange={(next) => {
+                      changeLanguage(next);
+                      setMenuOpen(false);
+                    }}
+                    variant="floating"
+                  />
                 </div>
                 {user ? (
                   <div className="mt-3 border-t border-white/10 pt-3">
@@ -273,7 +318,7 @@ export function AppShell({
                 href="/admin/announcements"
                 className="font-bold text-[var(--primary)] transition hover:opacity-80"
               >
-                {t.news}管理
+                {t.newsAdmin}
               </Link>
             ) : null}
             {isAdmin ? (
@@ -281,7 +326,7 @@ export function AppShell({
                 href="/admin/users"
                 className="font-bold text-[var(--primary)] transition hover:opacity-80"
               >
-                登録者一覧
+                {t.users}
               </Link>
             ) : null}
             <Link
@@ -306,6 +351,11 @@ export function AppShell({
             <Link href="/contact" className="transition hover:text-[var(--primary)]">
               {t.contact}
             </Link>
+            <LanguageSwitcher
+              language={language}
+              onChange={changeLanguage}
+              variant="floating"
+            />
             {user ? (
               <LogoutButton label={t.logout} loadingLabel={t.loggingOut} />
             ) : null}
