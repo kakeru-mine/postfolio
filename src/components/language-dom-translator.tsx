@@ -476,6 +476,63 @@ const translations: Record<string, string> = {
   "保存アイテムが見つかりません。": "Saved item not found.",
   "保存枠の上限に達しています。": "You've reached your saved-item limit.",
   "権限がありません。": "You don't have permission.",
+
+  // --- Login / register pages ---
+  "会員登録": "Sign up",
+  "ログイン": "Log in",
+  "パスワード": "Password",
+  "表示名を入力": "Enter a display name",
+  "パスワードを入力": "Enter your password",
+  "8文字以上": "8+ characters",
+  "無料で会員登録": "Sign up free",
+  "パスワードをお忘れですか？": "Forgot your password?",
+  "すでにアカウントをお持ちですか？": "Already have an account?",
+  "アカウントをお持ちでないですか？": "Don't have an account?",
+  "または": "or",
+  "Googleで続ける": "Continue with Google",
+  "ログイン画面へ": "Go to login",
+  "確認メールを再送する": "Resend the verification email",
+  "認証に失敗しました。": "Authentication failed.",
+  "続行することで、": "By continuing, you agree to the ",
+  "に同意したものとみなします。": ".",
+  "メールが届かない場合は、迷惑メールフォルダもご確認ください。":
+    "If the email doesn't arrive, please also check your spam folder.",
+  "確認メールを再送しました。": "We've resent the verification email.",
+  "再送に失敗しました。時間をおいてお試しください。":
+    "Resend failed. Please try again later.",
+  "Googleログインに失敗しました。もう一度お試しください。":
+    "Google sign-in failed. Please try again.",
+
+  // --- Auth API messages (rendered in the auth form) ---
+  "このメールアドレスはすでに登録されています。":
+    "This email address is already registered.",
+  "このメールアドレスは登録されていません。会員登録がお済みでない場合は、新規登録してください。":
+    "This email address isn't registered. If you haven't signed up yet, please create an account.",
+  "パスワードは8文字以上で入力してください。":
+    "Please enter a password of at least 8 characters.",
+  "パスワードを入力してください。": "Please enter your password.",
+  "パスワードを再設定しました。新しいパスワードでログインしてください。":
+    "Your password has been reset. Please log in with your new password.",
+  "パスワード再設定用のメールを送信しました。メールが届いた場合は、リンクから再設定してください。":
+    "We've sent a password reset email. If it arrives, reset your password via the link.",
+  "メールアドレスが未確認です。登録時に送信した確認メールのリンクから有効化してください。":
+    "Your email address isn't verified yet. Please activate it via the link in the verification email sent when you registered.",
+  "メールアドレスまたはパスワードが正しくありません。":
+    "The email address or password is incorrect.",
+  "メールアドレスを確認してください。": "Please check your email address.",
+  "再設定リンクが無効か、有効期限が切れています。お手数ですが再度お試しください。":
+    "The reset link is invalid or has expired. Please try again.",
+  "確認メールの送信に失敗しました。しばらく時間をおいて、もう一度お試しください。":
+    "We couldn't send the verification email. Please wait a while and try again.",
+  "確認メールを送信しました。メールが届かない場合は、入力したメールアドレスをご確認ください。":
+    "We've sent a verification email. If it doesn't arrive, please check the email address you entered.",
+  "確認メールを送信しました。メール内のリンクからメールアドレスの確認を完了してください。":
+    "We've sent a verification email. Complete email verification via the link in the email.",
+  "確認メールを送信しました。メール内のリンクから登録を完了してください。":
+    "We've sent a verification email. Complete your registration via the link in the email.",
+  "確認リンクが無効か、有効期限が切れています。お手数ですが確認メールを再送してください。":
+    "The verification link is invalid or has expired. Please resend the verification email.",
+  "表示名を入力してください。": "Please enter a display name.",
 };
 
 const reverseTranslations = Object.fromEntries(

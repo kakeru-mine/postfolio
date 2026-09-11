@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
+import { StandaloneLanguageControls } from "@/components/standalone-language-controls";
 
 export function AuthPage({
   mode,
@@ -36,6 +37,7 @@ export function AuthPage({
           <AuthForm mode={mode} />
         </section>
       </div>
+      <StandaloneLanguageControls />
     </main>
   );
 }
