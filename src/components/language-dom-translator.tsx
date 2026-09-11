@@ -159,6 +159,8 @@ const translations: Record<string, string> = {
   "ログアウト": "Log out",
   "ログアウト中...": "Logging out...",
   "ようこそPostfolioへ": "Welcome to Postfolio",
+  "気になったSNS投稿を、あとで使えるリサーチ資産として保存・整理できます。":
+    "Save and organize the social posts you care about as reusable research assets.",
   "保存したSNS投稿を、次の企画に使える形で整理しましょう。":
     "Organize saved social posts so you can use them in your next idea.",
   "投稿一覧を見る": "View saved posts",
@@ -268,6 +270,7 @@ const translations: Record<string, string> = {
   "投稿概要・コンテンツの切り口・投稿の評価をAIが生成します。":
     "AI generates a summary, content angles, and a post rating.",
   "スキップ": "Skip",
+  "次へ": "Next",
   "始める": "Get started",
   "戻る": "Back",
   "はじめかた": "Getting started",
