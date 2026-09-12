@@ -9,22 +9,22 @@ const SLIDES = [
   {
     icon: Sparkles,
     title: "ようこそPostfolioへ",
-    body: "気になったSNS投稿を、あとで使えるリサーチ資産として保存・整理できます。",
+    body: "気になった様々な媒体のSNS投稿を\n一括で保存・整理できます",
   },
   {
     icon: Bookmark,
     title: "投稿を保存",
-    body: "「新規作成」からURLを貼り付けて、SNS投稿を保存できます。",
+    body: "【コレクション】→【新規作成】で、コピーしたURLを\n貼り付けてSNS投稿を保存できます",
   },
   {
     icon: FolderOpen,
     title: "整理する",
-    body: "コレクションとタグで、投稿を目的別に整理できます。",
+    body: "【コレクション】と【タグ】で、投稿を目的別に整理できます。",
   },
   {
     icon: BarChart3,
     title: "AIで分析",
-    body: "投稿概要・コンテンツの切り口・投稿の評価をAIが生成します。",
+    body: "投稿概要・コンテンツの切り口・投稿の評価を\nAIが生成します。",
   },
 ];
 
@@ -72,7 +72,9 @@ export function OnboardingWelcome() {
           <Icon size={30} />
         </div>
         <h3 className="mt-5 text-xl font-bold">{slide.title}</h3>
-        <p className="mt-3 text-sm leading-7 text-slate-500">{slide.body}</p>
+        <p className="mt-3 text-sm leading-7 whitespace-pre-line text-slate-500">
+          {slide.body}
+        </p>
 
         <div className="mt-6 flex items-center justify-center gap-2">
           {SLIDES.map((_, index) => (
