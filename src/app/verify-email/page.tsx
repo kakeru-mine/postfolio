@@ -8,16 +8,26 @@ import { StandaloneLanguageControls } from "@/components/standalone-language-con
 
 type Status = "verifying" | "success" | "error";
 
+// Deep link back into the mobile app once verification succeeds. The app
+// registers the `postfolio://` scheme, so this reopens it (to the login screen).
+const APP_DEEP_LINK = "postfolio://email-verified";
+
 export default function VerifyEmailPage() {
   const [status, setStatus] = useState<Status>("verifying");
   const [message, setMessage] = useState("メールアドレスを確認しています...");
+  // Registrations started from the mobile app pass ?source=app, so we send the
+  // user back into the app instead of the web dashboard.
+  const [fromApp, setFromApp] = useState(false);
   const started = useRef(false);
 
   useEffect(() => {
     if (started.current) return;
     started.current = true;
 
-    const token = new URLSearchParams(window.location.search).get("token");
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const isApp = params.get("source") === "app";
+    setFromApp(isApp);
     if (!token) {
       setStatus("error");
       setMessage("確認リンクが正しくありません。");
@@ -37,8 +47,14 @@ export default function VerifyEmailPage() {
           return;
         }
         setStatus("success");
-        setMessage("メールアドレスの確認が完了しました。");
-        setTimeout(() => window.location.assign("/"), 1200);
+        if (isApp) {
+          setMessage(
+            "メールアドレスの確認が完了しました。下のボタンからアプリに戻ってログインしてください。",
+          );
+        } else {
+          setMessage("メールアドレスの確認が完了しました。");
+          setTimeout(() => window.location.assign("/"), 1200);
+        }
       })
       .catch(() => {
         setStatus("error");
@@ -71,6 +87,15 @@ export default function VerifyEmailPage() {
           </div>
           <h1 className="text-xl font-bold">メールアドレスの確認</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">{message}</p>
+
+          {status === "success" && fromApp ? (
+            <a
+              href={APP_DEEP_LINK}
+              className="button-primary mt-6 inline-flex justify-center"
+            >
+              アプリを開く
+            </a>
+          ) : null}
 
           {status === "error" ? (
             <Link

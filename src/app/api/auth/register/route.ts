@@ -11,6 +11,9 @@ const registerSchema = z.object({
   name: z.string().trim().min(1, "表示名を入力してください。").max(50),
   email: z.string().trim().email("メールアドレスを確認してください。"),
   password: z.string().min(8, "パスワードは8文字以上で入力してください。").max(128),
+  // "app" when the registration comes from the mobile app, so the verification
+  // link returns the user into the app instead of the web dashboard.
+  source: z.enum(["app", "web"]).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -81,7 +84,9 @@ export async function POST(request: NextRequest) {
 
     // Require email ownership confirmation before the account can sign in.
     const token = await createUserToken(user.id, "EMAIL_VERIFICATION");
-    const verifyUrl = `${canonicalAppUrl(request.nextUrl.origin)}/verify-email?token=${token}`;
+    const verifyUrl = `${canonicalAppUrl(request.nextUrl.origin)}/verify-email?token=${token}${
+      input.source === "app" ? "&source=app" : ""
+    }`;
     const verificationSent = await sendVerificationEmail(email, verifyUrl);
 
     // If the confirmation email could not be sent, do not report the
