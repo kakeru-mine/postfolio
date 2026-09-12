@@ -47,7 +47,7 @@ export default async function Home() {
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-      <OnboardingWelcome />
+      <OnboardingWelcome seen={Boolean(user.onboardingSeenAt)} />
       <PageHeader eyebrow="Dashboard" title="ホーム" />
 
       <OnboardingChecklist

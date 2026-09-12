@@ -1,9 +1,7 @@
 "use client";
 
 import { BarChart3, Bookmark, FolderOpen, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
-
-const SEEN_KEY = "postfolio-onboarding-seen";
+import { useState } from "react";
 
 const SLIDES = [
   {
@@ -19,36 +17,29 @@ const SLIDES = [
   {
     icon: FolderOpen,
     title: "整理する",
-    body: "【コレクション】と【タグ】で、投稿を目的別に整理できます。",
+    body: "【コレクション】と【タグ】で、\n投稿を目的別に整理できます。",
   },
   {
     icon: BarChart3,
     title: "AIで分析",
-    body: "投稿概要・コンテンツの切り口・投稿の評価を\nAIが生成します。",
+    body: "AIが\n【コンテンツの切り口】【投稿の評価】\nを生成します。",
   },
 ];
 
-// A one-time welcome carousel shown on first login (device-local flag), covering
-// the core loop: save posts, organize, analyze with AI.
-export function OnboardingWelcome() {
-  const [open, setOpen] = useState(false);
+// A one-time welcome carousel shown on first login, covering the core loop:
+// save posts, organize, analyze with AI. Whether it has been seen is an
+// account-level flag (`seen`, from the server), so it shows only once per
+// account across every device and browser.
+export function OnboardingWelcome({ seen }: { seen: boolean }) {
+  const [open, setOpen] = useState(!seen);
   const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    try {
-      if (window.localStorage.getItem(SEEN_KEY) !== "1") setOpen(true);
-    } catch {
-      // Storage may be unavailable (private mode) — skip the guide silently.
-    }
-  }, []);
 
   function close() {
     setOpen(false);
-    try {
-      window.localStorage.setItem(SEEN_KEY, "1");
-    } catch {
-      // ignore
-    }
+    // Persist to the account so the guide never reappears on any device.
+    void fetch("/api/onboarding/seen", { method: "POST" }).catch(() => {
+      // Best-effort; a failure just means the guide may show again next time.
+    });
   }
 
   if (!open) return null;

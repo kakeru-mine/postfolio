@@ -265,10 +265,10 @@ const translations: Record<string, string> = {
   "【コレクション】→【新規作成】で、コピーしたURLを\n貼り付けてSNS投稿を保存できます":
     "In Collections → New, paste the copied URL\nto save a social post.",
   "整理する": "Organize",
-  "【コレクション】と【タグ】で、投稿を目的別に整理できます。":
-    "Organize posts by purpose with Collections and Tags.",
-  "投稿概要・コンテンツの切り口・投稿の評価を\nAIが生成します。":
-    "AI generates a summary, content angles,\nand a post rating.",
+  "【コレクション】と【タグ】で、\n投稿を目的別に整理できます。":
+    "Organize posts by purpose\nwith Collections and Tags.",
+  "AIが\n【コンテンツの切り口】【投稿の評価】\nを生成します。":
+    "AI generates content angles\nand a post rating.",
   "スキップ": "Skip",
   "次へ": "Next",
   "始める": "Get started",

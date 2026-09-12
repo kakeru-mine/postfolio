@@ -16,6 +16,9 @@ export async function GET(request: NextRequest) {
         email: user.email,
         name: user.name,
         avatarUrl: user.avatarUrl,
+        onboardingSeenAt: user.onboardingSeenAt
+          ? user.onboardingSeenAt.toISOString()
+          : null,
       },
       entitlement: {
         plan: user.plan,
