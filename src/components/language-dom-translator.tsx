@@ -493,8 +493,6 @@ const translations: Record<string, string> = {
   "ログイン画面へ": "Go to login",
   "確認メールを再送する": "Resend the verification email",
   "認証に失敗しました。": "Authentication failed.",
-  "続行することで、": "By continuing, you agree to the ",
-  "に同意したものとみなします。": ".",
   "メールが届かない場合は、迷惑メールフォルダもご確認ください。":
     "If the email doesn't arrive, please also check your spam folder.",
   "確認メールを再送しました。": "We've resent the verification email.",
@@ -533,10 +531,107 @@ const translations: Record<string, string> = {
   "確認リンクが無効か、有効期限が切れています。お手数ですが確認メールを再送してください。":
     "The verification link is invalid or has expired. Please resend the verification email.",
   "表示名を入力してください。": "Please enter a display name.",
+
+  // --- Password reset / email verification pages ---
+  "パスワード再設定": "Reset password",
+  "登録済みのメールアドレスを入力してください。再設定用のリンクをお送りします。":
+    "Enter your registered email address and we'll send you a reset link.",
+  "再設定メールを送信": "Send reset email",
+  "ログイン画面へ戻る": "Back to login",
+  "パスワード再設定用のメールを送信しました。": "We've sent a password reset email.",
+  "新しいパスワード": "New password",
+  "ログインする": "Log in",
+  "読み込み中です...": "Loading...",
+  "再設定中...": "Resetting...",
+  "パスワードを再設定": "Reset password",
+  "再設定に失敗しました。": "Reset failed.",
+  "メールアドレスの確認": "Email verification",
+  "メールアドレスを確認しています...": "Verifying your email address...",
+  "確認リンクが正しくありません。": "The verification link is invalid.",
+  "確認に失敗しました。": "Verification failed.",
+  "メールアドレスの確認が完了しました。": "Your email address has been verified.",
+
+  // --- Counts / units (own text nodes; edge spacing is safe via trimmed reverse) ---
+  "件": " items",
+  "/月": "/mo",
+
+  // --- Plans page ---
+  "おすすめ": "Recommended",
+  "保存枠 30件": "30 saved items",
+  "保存枠 200件": "200 saved items",
+  "保存枠 500件": "500 saved items",
+  "まずは個人のSNSリサーチを始めたい方へ":
+    "For getting started with personal social research.",
+  "日常的に企画や発信へ活用する方へ":
+    "For everyday planning and content creation.",
+  "多くの投稿を蓄積・分析するクリエイターへ":
+    "For creators who archive and analyze many posts.",
+  "予約を取り消す": "Cancel scheduled change",
+  "Proへ変更": "Change to Pro",
+  "Creatorへ変更": "Change to Creator",
+  "Proを始める": "Start Pro",
+  "Creatorを始める": "Start Creator",
+  "無料期間中": "Free trial",
+  "お申し込みを受け付けました。プランが反映されました。":
+    "Your subscription is confirmed and your plan has been updated.",
+  "お申し込みはキャンセルされました。料金は発生していません。":
+    "Your subscription was cancelled. No charge was made.",
+  "お申し込み前の確認": "Before you subscribe",
+  "有料プランは月額制で、契約は月単位で自動更新されます。解約後も契約期間の終了日までは有料プランを利用でき、期間終了後にFreeプランへ切り替わります。利用者都合による日割り返金は原則として行いません。":
+    "Paid plans are billed monthly and renew automatically each month. After cancellation you can keep using the paid plan until the end of the billing period, after which it switches to Free. We generally don't offer prorated refunds for cancellations at the user's request.",
+  "課金・解約について": "Billing and cancellation",
+  "解約したらいつまで使えますか？": "How long can I use it after cancelling?",
+  "契約期間の終了日までは有料プランを利用できます。終了後にFreeプランへ切り替わります。":
+    "You can use the paid plan until the end of the billing period. After that it switches to Free.",
+  "返金はありますか？": "Are there refunds?",
+  "利用者都合による日割り返金は原則として行いません。重複決済などは個別に確認します。":
+    "We generally don't offer prorated refunds for cancellations at the user's request. Duplicate charges are reviewed individually.",
+  "上位プランへの変更は、差額（日割り）を即時に請求してすぐ反映されます。下位プランへの変更は、現在の契約期間の終了時に切り替わり、それまでは現在のプランをご利用いただけます。":
+    "Upgrades are billed the prorated difference immediately and take effect right away. Downgrades take effect at the end of the current billing period; until then you keep your current plan.",
+  "保存した投稿は消えますか？": "Will my saved posts be deleted?",
+  "プラン変更や解約予約だけで保存投稿は削除されません。ただし、Freeの保存枠を超える場合は新規保存が制限されることがあります。":
+    "Changing plans or scheduling a cancellation doesn't delete your saved posts. However, if you exceed the Free storage limit, new saves may be restricted.",
+
+  // --- Dashboard / collections / library subtitles ---
+  "保存したSNS投稿を、あとで探しやすいリサーチカードとして整理します。":
+    "Organize your saved social posts into research cards that are easy to find later.",
+  "保存したSNSの投稿を分類ごとに整理できます。":
+    "Organize your saved social posts by category.",
+  "このコレクションにはまだ投稿がありません。":
+    "This collection has no posts yet.",
+
+  // --- Settings: theme ---
+  "カラーテーマ": "Color theme",
+  "アプリの背景、メイン、アクセント、サイドバーの色を変更できます。":
+    "Change the app's background, main, accent, and sidebar colors.",
+  "初期カラーに戻す": "Reset to default colors",
+  "背景色": "Background color",
+  "選択中のタブや見出し、グラデーションに使われます。":
+    "Used for the selected tab, headings, and gradients.",
+  "「新規作成」や保存ボタンなど、主要な操作に使われます。":
+    "Used for primary actions like Create New and Save.",
+  "プレビュー": "Preview",
+  "保存した投稿のタイトル": "Saved post title",
+  "選択した配色がアプリ全体に反映されます。":
+    "The selected colors apply across the whole app.",
+  "カラーコードは #123456 の形式で入力してください。":
+    "Enter the color code in the #123456 format.",
+
+  // --- Settings: account deletion ---
+  "アカウント削除について": "About account deletion",
+  "アカウントの削除をご希望の場合は、お問い合わせページよりご連絡ください。":
+    "If you'd like to delete your account, please contact us via the contact page.",
+  "削除すると、保存投稿・コレクション・タグ・AI分析結果・設定情報がすべて削除され、元に戻せません。":
+    "Deleting permanently removes your saved posts, collections, tags, AI analysis results, and settings, and can't be undone.",
+  "有料プランをご利用中の場合は、先に解約手続きをお願いいたします。":
+    "If you're on a paid plan, please cancel it first.",
 };
 
+// Reverse lookups are keyed by the trimmed English so that dictionary values
+// carrying intentional edge spacing (e.g. "件" -> " items") still match when the
+// walker looks them up by the trimmed node text.
 const reverseTranslations = Object.fromEntries(
-  Object.entries(translations).map(([ja, en]) => [en, ja]),
+  Object.entries(translations).map(([ja, en]) => [en.trim(), ja]),
 ) as Record<string, string>;
 
 const textAttributes = ["placeholder", "aria-label", "title"] as const;
@@ -632,6 +727,9 @@ function translateTextNodes(root: Element, dictionary: Record<string, string>) {
       if (["SCRIPT", "STYLE", "NOSCRIPT"].includes(parent.tagName)) {
         return NodeFilter.FILTER_REJECT;
       }
+      // Content that renders itself per-language (e.g. sentences with inline
+      // links) opts out with data-i18n-dynamic so we never mangle it.
+      if (parent.closest("[data-i18n-dynamic]")) return NodeFilter.FILTER_REJECT;
       return node.nodeValue?.trim()
         ? NodeFilter.FILTER_ACCEPT
         : NodeFilter.FILTER_REJECT;
@@ -655,6 +753,7 @@ function translateTextNodes(root: Element, dictionary: Record<string, string>) {
 function translateAttributes(root: Element, dictionary: Record<string, string>) {
   const elements = root.querySelectorAll<HTMLElement>("*");
   for (const element of elements) {
+    if (element.closest("[data-i18n-dynamic]")) continue;
     for (const attribute of textAttributes) {
       const value = element.getAttribute(attribute);
       if (!value) continue;

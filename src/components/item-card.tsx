@@ -1,9 +1,8 @@
 import { Collection, SavedItem } from "@prisma/client";
-import { format } from "date-fns";
-import { ja } from "date-fns/locale";
 import { ArrowUpRight, Folder } from "lucide-react";
 import Link from "next/link";
 import { ThumbnailImage } from "@/components/thumbnail-image";
+import { LocalizedDate } from "@/components/localized-date";
 import { platformLabel } from "@/lib/platform";
 
 export type ItemCardItem = Pick<
@@ -82,7 +81,7 @@ export function ItemCard({
               {item.collection?.name ?? "未分類"}
             </span>
             <time className="shrink-0">
-              {format(item.createdAt, "M月d日", { locale: ja })}
+              <LocalizedDate date={item.createdAt} />
             </time>
           </div>
         </div>
@@ -147,7 +146,9 @@ export function ItemCard({
             <Folder size={14} />
             {item.collection?.name ?? "未分類"}
           </span>
-          <time>{format(item.createdAt, "M月d日", { locale: ja })}</time>
+          <time>
+            <LocalizedDate date={item.createdAt} />
+          </time>
         </div>
       </div>
     </Link>

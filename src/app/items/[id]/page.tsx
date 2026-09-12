@@ -1,5 +1,4 @@
 import { format } from "date-fns";
-import { ja } from "date-fns/locale";
 import { ArrowLeft, Calendar, CalendarDays, Globe2, UserRound } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -109,16 +108,14 @@ export default async function ItemDetail({
                 <Meta
                   label="登録日"
                   icon={<Calendar size={16} />}
-                  value={format(item.createdAt, "yyyy年M月d日", {
-                    locale: ja,
-                  })}
+                  value={format(item.createdAt, "yyyy/MM/dd")}
                 />
                 <Meta
                   label="投稿日"
                   icon={<CalendarDays size={17} />}
                   value={
                     publishedAt
-                      ? format(publishedAt, "yyyy年M月d日", { locale: ja })
+                      ? format(publishedAt, "yyyy/MM/dd")
                       : "取得できませんでした"
                   }
                 />

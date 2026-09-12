@@ -2,7 +2,6 @@
 
 import type { Collection, SavedItem } from "@prisma/client";
 import { format } from "date-fns";
-import { ja } from "date-fns/locale";
 import {
   Calendar,
   CalendarDays,
@@ -281,18 +280,14 @@ export function CollectionItemsBrowser({
                 <DetailMeta
                   icon={<Calendar size={16} />}
                   label="登録日"
-                  value={format(selectedItem.createdAt, "yyyy年M月d日", {
-                    locale: ja,
-                  })}
+                  value={format(selectedItem.createdAt, "yyyy/MM/dd")}
                 />
                 <DetailMeta
                   icon={<CalendarDays size={16} />}
                   label="投稿日"
                   value={
                     selectedItem.publishedAt
-                      ? format(selectedItem.publishedAt, "yyyy年M月d日", {
-                          locale: ja,
-                        })
+                      ? format(selectedItem.publishedAt, "yyyy/MM/dd")
                       : "取得できませんでした"
                   }
                 />

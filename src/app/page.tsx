@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { format } from "date-fns";
-import { ja } from "date-fns/locale";
 import {
   ArrowRight,
   CreditCard,
@@ -160,9 +159,7 @@ export default async function Home() {
                     ? "利用終了予定日"
                     : "次回更新日"
                 }
-                value={format(user.subscriptionPeriodEnd, "yyyy年M月d日", {
-                  locale: ja,
-                })}
+                value={format(user.subscriptionPeriodEnd, "yyyy/MM/dd")}
               />
             ) : null}
           </dl>
