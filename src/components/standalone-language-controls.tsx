@@ -7,7 +7,13 @@ import {
 } from "@/components/language-switcher";
 import { LanguageDomTranslator } from "@/components/language-dom-translator";
 
-export function StandaloneLanguageControls() {
+export function StandaloneLanguageControls({
+  className,
+}: {
+  // Optional wrapper class to position the switcher (e.g. pin it to a corner).
+  // When omitted the switcher renders inline, as on the legal/info pages.
+  className?: string;
+}) {
   const [language, setLanguage] = useState<AppLanguage>("ja");
 
   useEffect(() => {
@@ -34,14 +40,18 @@ export function StandaloneLanguageControls() {
     document.documentElement.lang = nextLanguage;
   }
 
+  const switcher = (
+    <LanguageSwitcher
+      language={language}
+      onChange={changeLanguage}
+      variant="floating"
+    />
+  );
+
   return (
     <>
       <LanguageDomTranslator language={language} />
-      <LanguageSwitcher
-        language={language}
-        onChange={changeLanguage}
-        variant="floating"
-      />
+      {className ? <div className={className}>{switcher}</div> : switcher}
     </>
   );
 }

@@ -13,10 +13,15 @@ export function AccountDeleteSection() {
           </p>
           <h2 className="mt-2 text-xl font-bold">アカウント削除について</h2>
           <p className="mt-2 text-sm leading-7 text-slate-500">
-            アカウントの削除をご希望の場合は、お問い合わせページよりご連絡ください。
-            <br className="hidden sm:block" />
-            削除すると、保存投稿・コレクション・タグ・AI分析結果・設定情報がすべて削除され、元に戻せません。
-            有料プランをご利用中の場合は、先に解約手続きをお願いいたします。
+            <span className="block">
+              アカウントの削除をご希望の場合は、お問い合わせページよりご連絡ください。
+            </span>
+            <span className="block">
+              削除すると、保存投稿・コレクション・タグ・AI分析結果・設定情報がすべて削除され、元に戻せません。
+            </span>
+            <span className="block">
+              有料プランをご利用中の場合は、先に解約手続きをお願いいたします。
+            </span>
           </p>
         </div>
         <Link

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { LoaderCircle, LockKeyhole } from "lucide-react";
+import { StandaloneLanguageControls } from "@/components/standalone-language-controls";
 
 export default function ResetPasswordPage() {
   const [token, setToken] = useState<string | null>(null);
@@ -114,6 +115,7 @@ export default function ResetPasswordPage() {
           )}
         </section>
       </div>
+      <StandaloneLanguageControls className="fixed right-4 top-4 z-50" />
     </main>
   );
 }

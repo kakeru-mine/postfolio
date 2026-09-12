@@ -117,6 +117,9 @@ export function AppShell({
     pathname === "/welcome" ||
     pathname === "/login" ||
     pathname === "/register" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password" ||
+    pathname === "/verify-email" ||
     pathname === "/announcements" ||
     pathname === "/terms" ||
     pathname === "/privacy" ||

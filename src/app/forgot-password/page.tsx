@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { LoaderCircle, Mail } from "lucide-react";
+import { StandaloneLanguageControls } from "@/components/standalone-language-controls";
 
 export default function ForgotPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
@@ -107,6 +108,7 @@ export default function ForgotPasswordPage() {
           </p>
         </section>
       </div>
+      <StandaloneLanguageControls className="fixed right-4 top-4 z-50" />
     </main>
   );
 }

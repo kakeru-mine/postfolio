@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { LoaderCircle, CheckCircle2, XCircle } from "lucide-react";
+import { StandaloneLanguageControls } from "@/components/standalone-language-controls";
 
 type Status = "verifying" | "success" | "error";
 
@@ -81,6 +82,7 @@ export default function VerifyEmailPage() {
           ) : null}
         </section>
       </div>
+      <StandaloneLanguageControls className="fixed right-4 top-4 z-50" />
     </main>
   );
 }

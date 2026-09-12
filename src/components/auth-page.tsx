@@ -37,7 +37,7 @@ export function AuthPage({
           <AuthForm mode={mode} />
         </section>
       </div>
-      <StandaloneLanguageControls />
+      <StandaloneLanguageControls className="fixed right-4 top-4 z-50" />
     </main>
   );
 }

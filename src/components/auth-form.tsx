@@ -2,10 +2,31 @@
 
 import { LoaderCircle, LockKeyhole, Mail, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+// The consent line mixes plain text with inline links, which the DOM translator
+// can't reorder cleanly across languages. Instead we render it per-language and
+// mark it data-i18n-dynamic so the translator leaves it alone. We follow the
+// language the switcher writes onto <html lang="...">.
+function useDocumentLanguage(): "ja" | "en" {
+  const [lang, setLang] = useState<"ja" | "en">("ja");
+  useEffect(() => {
+    const read = () =>
+      setLang(document.documentElement.lang === "en" ? "en" : "ja");
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["lang"],
+    });
+    return () => observer.disconnect();
+  }, []);
+  return lang;
+}
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const registering = mode === "register";
+  const language = useDocumentLanguage();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [pendingMessage, setPendingMessage] = useState("");
@@ -196,16 +217,35 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         Googleで続ける
       </a>
 
-      <p className="text-center text-xs leading-5 text-slate-400">
-        続行することで、
-        <Link href="/terms" className="underline hover:text-slate-600">
-          利用規約
-        </Link>
-        ・
-        <Link href="/privacy" className="underline hover:text-slate-600">
-          プライバシーポリシー
-        </Link>
-        に同意したものとみなします。
+      <p
+        data-i18n-dynamic
+        className="text-center text-xs leading-5 text-slate-400"
+      >
+        {language === "en" ? (
+          <>
+            By continuing, you agree to our{" "}
+            <Link href="/terms" className="underline hover:text-slate-600">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="underline hover:text-slate-600">
+              Privacy Policy
+            </Link>
+            .
+          </>
+        ) : (
+          <>
+            続行することで、
+            <Link href="/terms" className="underline hover:text-slate-600">
+              利用規約
+            </Link>
+            ・
+            <Link href="/privacy" className="underline hover:text-slate-600">
+              プライバシーポリシー
+            </Link>
+            に同意したものとみなします。
+          </>
+        )}
       </p>
     </form>
   );
