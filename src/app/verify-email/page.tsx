@@ -49,7 +49,7 @@ export default function VerifyEmailPage() {
         setStatus("success");
         if (isApp) {
           setMessage(
-            "メールアドレスの確認が完了しました。下のボタンからアプリに戻ってログインしてください。",
+            "メールアドレスの確認が完了しました。\n下のボタンからアプリに戻ってログインしてください。",
           );
         } else {
           setMessage("メールアドレスの確認が完了しました。");
@@ -86,7 +86,9 @@ export default function VerifyEmailPage() {
             )}
           </div>
           <h1 className="text-xl font-bold">メールアドレスの確認</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600">{message}</p>
+          <p className="mt-3 text-sm leading-6 whitespace-pre-line text-slate-600">
+            {message}
+          </p>
 
           {status === "success" && fromApp ? (
             <a
