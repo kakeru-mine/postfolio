@@ -60,6 +60,7 @@ export default async function Home({
         url: true,
         sourcePlatform: true,
         title: true,
+        authorName: true,
         description: true,
         thumbnailUrl: true,
         domain: true,

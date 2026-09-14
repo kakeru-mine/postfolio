@@ -11,6 +11,7 @@ export type ItemCardItem = Pick<
   | "url"
   | "sourcePlatform"
   | "title"
+  | "authorName"
   | "description"
   | "thumbnailUrl"
   | "domain"
@@ -29,6 +30,17 @@ export function ItemCard({
   item: ItemCardItem;
   variant?: "default" | "dewey";
 }) {
+  // TikTok / Bluesky / Pinterest expose the post body (or a generic phrase) as
+  // their OG title, unlike X / Threads / Instagram whose title is already
+  // "Name (@handle) on Platform". Lead those three with the captured author so
+  // every card shows author info as the heading, with the body still holding
+  // the content.
+  const authorLedPlatforms = ["TIKTOK", "BLUESKY", "PINTEREST"];
+  const heading =
+    authorLedPlatforms.includes(item.sourcePlatform) && item.authorName
+      ? `${item.authorName} on ${platformLabel(item.sourcePlatform)}`
+      : item.title || item.domain || item.url;
+
   if (variant === "dewey") {
     return (
       <Link
@@ -69,7 +81,7 @@ export function ItemCard({
           </div>
 
           <h2 className="mt-3 line-clamp-2 text-base font-black leading-6 tracking-tight text-[var(--ink)] sm:text-lg sm:leading-7">
-            {item.title || item.domain || item.url}
+            {heading}
           </h2>
           <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
             {item.userMemo || item.description || "あとで使える参考投稿として保存されています。"}
@@ -122,7 +134,7 @@ export function ItemCard({
           />
         </div>
         <h2 className="mt-2 line-clamp-2 min-h-10 text-sm font-bold leading-5 sm:mt-3 sm:min-h-12 sm:text-base sm:leading-6">
-          {item.title || item.domain || item.url}
+          {heading}
         </h2>
         <p className="mt-1.5 line-clamp-2 min-h-9 text-xs leading-4 text-slate-500 sm:mt-2 sm:min-h-10 sm:text-sm sm:leading-5">
           {item.purpose || item.userMemo || item.description || "メモはまだありません"}
