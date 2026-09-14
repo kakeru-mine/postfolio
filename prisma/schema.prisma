@@ -48,6 +48,7 @@ model User {
   subscriptionCancelAtPeriodEnd Boolean            @default(false)
   scheduledPlan           SubscriptionPlan?
   onboardingSeenAt        DateTime?
+  aiAnalysisUsedAt        DateTime?
   themeBackground         String             @default("#ffffff")
   themeMain               String             @default("#2563eb")
   themeAccent             String             @default("#ff6b6b")

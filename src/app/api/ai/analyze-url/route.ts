@@ -71,6 +71,13 @@ export async function POST(request: NextRequest) {
       },
     });
     await updateSavedItemAiRating(item.id, analysis.rating);
+    // Latch a durable "has ever used AI analysis" flag for the onboarding
+    // checklist, so it doesn't revert when the per-period usage count resets
+    // (daily on Free, monthly on paid).
+    await prisma.user.updateMany({
+      where: { id: user.id, aiAnalysisUsedAt: null },
+      data: { aiAnalysisUsedAt: new Date() },
+    });
     revalidatePath(`/items/${item.id}`);
     revalidatePath("/collections");
     if (item.collectionId) {

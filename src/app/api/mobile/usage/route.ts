@@ -21,6 +21,9 @@ export async function GET(request: NextRequest) {
       },
       savedItemCount: usage.savedItemCount,
       aiAnalysisCount: usage.aiAnalysisCount,
+      // Durable "has ever used AI analysis" flag for the onboarding checklist,
+      // so it doesn't revert when the per-period AI count resets.
+      aiAnalysisEverUsed: Boolean(user.aiAnalysisUsedAt),
     });
   } catch (error) {
     return apiError(error);

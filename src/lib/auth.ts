@@ -154,6 +154,7 @@ async function resolveUserFromToken(token: string): Promise<User | null> {
       u."subscriptionCancelAtPeriodEnd",
       u."scheduledPlan",
       u."onboardingSeenAt",
+      u."aiAnalysisUsedAt",
       u."themeBackground",
       u."themeMain",
       u."themeAccent",

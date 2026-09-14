@@ -52,7 +52,7 @@ export default async function Home() {
 
       <OnboardingChecklist
         savedDone={usage.savedItemCount > 0}
-        analyzeDone={usage.aiAnalysisCount > 0}
+        analyzeDone={Boolean(user.aiAnalysisUsedAt)}
         collectionDone={collectionCount > 0}
       />
 

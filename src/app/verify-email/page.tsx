@@ -18,6 +18,9 @@ export default function VerifyEmailPage() {
   // Registrations started from the mobile app pass ?source=app, so we send the
   // user back into the app instead of the web dashboard.
   const [fromApp, setFromApp] = useState(false);
+  // Deep link carrying the bearer session token, so tapping "Open app" signs
+  // the user straight into the app (falls back to opening it if no token).
+  const [appLink, setAppLink] = useState(APP_DEEP_LINK);
   const started = useRef(false);
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function VerifyEmailPage() {
     fetch("/api/auth/verify-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, source: isApp ? "app" : "web" }),
     })
       .then(async (response) => {
         const result = await response.json().catch(() => ({}));
@@ -48,6 +51,11 @@ export default function VerifyEmailPage() {
         }
         setStatus("success");
         if (isApp) {
+          if (result.sessionToken) {
+            setAppLink(
+              `${APP_DEEP_LINK}?token=${encodeURIComponent(result.sessionToken)}`,
+            );
+          }
           setMessage(
             "メールアドレスの確認が完了しました。\n下のボタンからアプリに戻ってログインしてください。",
           );
@@ -92,7 +100,7 @@ export default function VerifyEmailPage() {
 
           {status === "success" && fromApp ? (
             <a
-              href={APP_DEEP_LINK}
+              href={appLink}
               className="button-primary mt-6 inline-flex justify-center"
             >
               アプリを開く
