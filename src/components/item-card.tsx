@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ThumbnailImage } from "@/components/thumbnail-image";
 import { LocalizedDate } from "@/components/localized-date";
 import { platformLabel } from "@/lib/platform";
-import { isAuthorLedPlatform, itemHeading } from "@/lib/item-display";
+import { itemHeading, itemSubtitle } from "@/lib/item-display";
 
 export type ItemCardItem = Pick<
   SavedItem,
@@ -32,11 +32,10 @@ export function ItemCard({
   variant?: "default" | "dewey";
 }) {
   // Author-led platforms (TikTok / Bluesky / Pinterest / Substack) show the
-  // captured author as the heading; the former title (post body or article
-  // title) then serves as the subtitle so it stays visible.
+  // captured author as the heading; the subtitle then carries the post content
+  // or article title (see itemSubtitle for the per-platform rules).
   const heading = itemHeading(item);
-  const authorLed = isAuthorLedPlatform(item.sourcePlatform, item.authorName);
-  const subtitle = authorLed ? item.title : item.description;
+  const subtitle = itemSubtitle(item);
 
   if (variant === "dewey") {
     return (

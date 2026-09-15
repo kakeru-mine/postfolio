@@ -32,3 +32,39 @@ export function itemHeading(item: {
   }
   return item.title || item.domain || item.url;
 }
+
+// Substack has two post types: long-form posts (have an article title, like
+// note.com) and notes (short posts, like X). Notes have no article title, so
+// Substack returns the author as the OG title — detect them so we show the note
+// body instead of a redundant author line.
+export function isSubstackNote(item: {
+  sourcePlatform: SourcePlatform;
+  title?: string | null;
+  authorName?: string | null;
+  url: string;
+}): boolean {
+  if (item.sourcePlatform !== "SUBSTACK") return false;
+  if (/\/note\//.test(item.url)) return true;
+  return Boolean(
+    item.title &&
+      item.authorName &&
+      item.title.trim() === item.authorName.trim(),
+  );
+}
+
+// The secondary line under the heading. For author-led items it is the post
+// content (notes / TikTok / Bluesky / Pinterest) or the article title (Substack
+// long-form posts); otherwise the description.
+export function itemSubtitle(item: {
+  sourcePlatform: SourcePlatform;
+  authorName?: string | null;
+  title?: string | null;
+  description?: string | null;
+  url: string;
+}): string | null | undefined {
+  if (!isAuthorLedPlatform(item.sourcePlatform, item.authorName)) {
+    return item.description;
+  }
+  if (isSubstackNote(item)) return item.description;
+  return item.title || item.description;
+}
