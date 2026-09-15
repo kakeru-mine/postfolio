@@ -21,6 +21,7 @@ import { AiAnalysisPanel } from "@/components/ai-analysis-panel";
 import { BulkItemActions } from "@/components/bulk-item-actions";
 import { ItemEditor } from "@/components/item-editor";
 import { MetadataRefreshButton } from "@/components/metadata-refresh-button";
+import { isAuthorLedPlatform, itemHeading } from "@/lib/item-display";
 import { platformLabel } from "@/lib/platform";
 import type { AiRating } from "@/lib/saved-item-ai-rating";
 
@@ -241,11 +242,16 @@ export function CollectionItemsBrowser({
               </div>
               <div className="mt-4">
                 <h3 className="text-xl font-bold leading-8 sm:text-2xl">
-                  {selectedItem.title ||
-                    selectedItem.domain ||
-                    selectedItem.url}
+                  {itemHeading(selectedItem)}
                 </h3>
-                {selectedItem.description ? (
+                {isAuthorLedPlatform(
+                  selectedItem.sourcePlatform,
+                  selectedItem.authorName,
+                ) && selectedItem.title ? (
+                  <p className="mt-3 text-sm leading-7 text-slate-500">
+                    {selectedItem.title}
+                  </p>
+                ) : selectedItem.description ? (
                   <p className="mt-3 text-sm leading-7 text-slate-500">
                     {selectedItem.description}
                   </p>

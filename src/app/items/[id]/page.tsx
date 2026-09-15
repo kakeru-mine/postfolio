@@ -6,6 +6,7 @@ import { AiAnalysisPanel } from "@/components/ai-analysis-panel";
 import { ItemEditor } from "@/components/item-editor";
 import { MetadataRefreshButton } from "@/components/metadata-refresh-button";
 import { ThumbnailImage } from "@/components/thumbnail-image";
+import { isAuthorLedPlatform, itemHeading } from "@/lib/item-display";
 import { platformLabel } from "@/lib/platform";
 import { prisma } from "@/lib/prisma";
 import { getSavedItemAiRating } from "@/lib/saved-item-ai-rating";
@@ -83,9 +84,14 @@ export default async function ItemDetail({
               </div>
               <div className="mt-5">
                 <h1 className="text-2xl font-bold leading-9 sm:text-3xl">
-                  {item.title || item.domain || item.url}
+                  {itemHeading(item)}
                 </h1>
-                {item.description ? (
+                {isAuthorLedPlatform(item.sourcePlatform, item.authorName) &&
+                item.title ? (
+                  <p className="mt-4 leading-7 text-slate-600">
+                    {truncateText(item.title, 60)}
+                  </p>
+                ) : item.description ? (
                   <p className="mt-4 leading-7 text-slate-600">
                     {truncateText(item.description, 50)}
                   </p>

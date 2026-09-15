@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ThumbnailImage } from "@/components/thumbnail-image";
 import { LocalizedDate } from "@/components/localized-date";
 import { platformLabel } from "@/lib/platform";
+import { isAuthorLedPlatform, itemHeading } from "@/lib/item-display";
 
 export type ItemCardItem = Pick<
   SavedItem,
@@ -30,16 +31,12 @@ export function ItemCard({
   item: ItemCardItem;
   variant?: "default" | "dewey";
 }) {
-  // TikTok / Bluesky / Pinterest expose the post body (or a generic phrase) as
-  // their OG title, unlike X / Threads / Instagram whose title is already
-  // "Name (@handle) on Platform". Lead those three with the captured author so
-  // every card shows author info as the heading, with the body still holding
-  // the content.
-  const authorLedPlatforms = ["TIKTOK", "BLUESKY", "PINTEREST"];
-  const heading =
-    authorLedPlatforms.includes(item.sourcePlatform) && item.authorName
-      ? `${item.authorName} on ${platformLabel(item.sourcePlatform)}`
-      : item.title || item.domain || item.url;
+  // Author-led platforms (TikTok / Bluesky / Pinterest / Substack) show the
+  // captured author as the heading; the former title (post body or article
+  // title) then serves as the subtitle so it stays visible.
+  const heading = itemHeading(item);
+  const authorLed = isAuthorLedPlatform(item.sourcePlatform, item.authorName);
+  const subtitle = authorLed ? item.title : item.description;
 
   if (variant === "dewey") {
     return (
@@ -84,7 +81,7 @@ export function ItemCard({
             {heading}
           </h2>
           <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
-            {item.userMemo || item.description || "あとで使える参考投稿として保存されています。"}
+            {item.userMemo || subtitle || item.description || "あとで使える参考投稿として保存されています。"}
           </p>
 
           <div className="mt-auto flex items-center justify-between gap-3 border-t border-stone-100 pt-4 text-xs text-stone-400">
@@ -137,7 +134,7 @@ export function ItemCard({
           {heading}
         </h2>
         <p className="mt-1.5 line-clamp-2 min-h-9 text-xs leading-4 text-slate-500 sm:mt-2 sm:min-h-10 sm:text-sm sm:leading-5">
-          {item.purpose || item.userMemo || item.description || "メモはまだありません"}
+          {item.purpose || item.userMemo || subtitle || item.description || "メモはまだありません"}
         </p>
 
         {item.userTags.length ? (
