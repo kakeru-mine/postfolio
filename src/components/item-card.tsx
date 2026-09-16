@@ -4,7 +4,11 @@ import Link from "next/link";
 import { ThumbnailImage } from "@/components/thumbnail-image";
 import { LocalizedDate } from "@/components/localized-date";
 import { platformLabel } from "@/lib/platform";
-import { itemHeading, itemSubtitle } from "@/lib/item-display";
+import {
+  isGenericPinterestCaption,
+  itemHeading,
+  itemSubtitle,
+} from "@/lib/item-display";
 
 export type ItemCardItem = Pick<
   SavedItem,
@@ -36,6 +40,15 @@ export function ItemCard({
   // or article title (see itemSubtitle for the per-platform rules).
   const heading = itemHeading(item);
   const subtitle = itemSubtitle(item);
+  // The subtitle fallbacks below reach for the raw description; for Pinterest
+  // that is the same generic boilerplate itemSubtitle already drops, so strip it
+  // here too rather than let it reappear as the fallback.
+  const description = isGenericPinterestCaption(
+    item.sourcePlatform,
+    item.description,
+  )
+    ? null
+    : item.description;
 
   if (variant === "dewey") {
     return (
@@ -80,7 +93,7 @@ export function ItemCard({
             {heading}
           </h2>
           <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
-            {item.userMemo || subtitle || item.description || "あとで使える参考投稿として保存されています。"}
+            {item.userMemo || subtitle || description || "あとで使える参考投稿として保存されています。"}
           </p>
 
           <div className="mt-auto flex items-center justify-between gap-3 border-t border-stone-100 pt-4 text-xs text-stone-400">
@@ -133,7 +146,7 @@ export function ItemCard({
           {heading}
         </h2>
         <p className="mt-1.5 line-clamp-2 min-h-9 text-xs leading-4 text-slate-500 sm:mt-2 sm:min-h-10 sm:text-sm sm:leading-5">
-          {item.purpose || item.userMemo || subtitle || item.description || "メモはまだありません"}
+          {item.purpose || item.userMemo || subtitle || description || "メモはまだありません"}
         </p>
 
         {item.userTags.length ? (
