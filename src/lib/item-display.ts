@@ -19,16 +19,19 @@ export function isAuthorLedPlatform(
   return AUTHOR_LED_PLATFORMS.includes(sourcePlatform) && Boolean(authorName);
 }
 
-// Pinterest's oEmbed returns a generic caption ("〇〇 さんのピンをぜひご覧ください" /
-// "See 〇〇's Pins") for pins whose creator added no description. That text is
-// identical across such pins and carries no information, so we treat it as no
-// caption and let the thumbnail + author line distinguish the card instead of
-// repeating the same boilerplate on every Pinterest item.
+// Pinterest returns a generic "Discover (and save) your Pins on Pinterest"
+// caption for pins whose creator added no description. It carries no
+// information and is identical across such pins, so we treat it as no caption
+// and let the thumbnail + author line distinguish the card. Crucially, Pinterest
+// localises this phrase into many languages (e.g. Italian "Scopri (e salva) i
+// tuoi Pin su Pinterest.", Spanish, French, German), and every variant names
+// Pinterest itself — something a real pin caption almost never does — so we key
+// off the word "Pinterest". The Japanese variant ("〇〇 さんのピンをぜひご覧ください")
+// is the exception, using kana without the word, so match its phrasing too.
 const PINTEREST_GENERIC_CAPTION_PATTERNS = [
+  /pinterest/i,
   /ピンをぜひご覧ください/,
-  /さんのピンを見てみましょう/,
-  /'s Pins\b/i,
-  /on Pinterest, the world/i,
+  /ピンを見てみましょう/,
 ];
 
 export function isGenericPinterestCaption(
