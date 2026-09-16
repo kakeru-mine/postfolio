@@ -4,6 +4,8 @@ import { issueSessionToken } from "@/lib/auth";
 import { findOrCreateGoogleUser } from "@/lib/google-account";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
+import { getClientInfo, logAuthEvent } from "@/lib/request-log";
 
 const bodySchema = z.object({
   idToken: z.string().min(1),
@@ -23,7 +25,17 @@ function allowedAudiences() {
 // server-side (signature + claims) via Google's tokeninfo endpoint, then
 // find-or-create the user and return a session token in the body.
 export async function POST(request: NextRequest) {
+  const client = getClientInfo(request);
   try {
+    const limit = rateLimit(`google-mobile:${client.ip}`, 10, 10 * 60_000);
+    if (!limit.allowed) {
+      logAuthEvent("google_mobile.rate_limited", client);
+      return NextResponse.json(
+        { error: "リクエストが多すぎます。しばらくしてからお試しください。" },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } },
+      );
+    }
+
     const { idToken } = bodySchema.parse(await request.json());
 
     const audiences = allowedAudiences();
@@ -69,6 +81,8 @@ export async function POST(request: NextRequest) {
         { status: 401 },
       );
     }
+
+    logAuthEvent("google_mobile.login", client, { email: claims.email });
 
     const userId = await findOrCreateGoogleUser({
       email: claims.email,

@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { createSession } from "@/lib/auth";
 import { findOrCreateGoogleUser } from "@/lib/google-account";
+import { rateLimit } from "@/lib/rate-limit";
+import { getClientInfo, logAuthEvent } from "@/lib/request-log";
 import { canonicalAppUrl } from "@/lib/stripe";
 
 const GOOGLE_STATE_COOKIE = "g_oauth_state";
@@ -17,6 +19,13 @@ function loginError(request: NextRequest) {
 // and signs them in via the existing session layer. Google-verified email means
 // no separate email-verification step is needed.
 export async function GET(request: NextRequest) {
+  const client = getClientInfo(request);
+  const limit = rateLimit(`google-web:${client.ip}`, 10, 10 * 60_000);
+  if (!limit.allowed) {
+    logAuthEvent("google_web.rate_limited", client);
+    return loginError(request);
+  }
+
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   if (!clientId || !clientSecret) return loginError(request);
@@ -70,6 +79,9 @@ export async function GET(request: NextRequest) {
     if (!profile.email || profile.email_verified !== true) {
       return loginError(request);
     }
+
+    logAuthEvent("google_web.login", client, { email: profile.email });
+
     const userId = await findOrCreateGoogleUser({
       email: profile.email,
       name: profile.name,

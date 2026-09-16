@@ -58,7 +58,12 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get("email") ?? "");
     const body = {
-      ...(registering ? { name: String(formData.get("name") ?? "") } : {}),
+      ...(registering
+        ? {
+            name: String(formData.get("name") ?? ""),
+            website: String(formData.get("website") ?? ""),
+          }
+        : {}),
       email,
       password: String(formData.get("password") ?? ""),
     };
@@ -115,6 +120,25 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   return (
     <form className="mt-7 space-y-4" onSubmit={submit}>
+      {registering ? (
+        // Honeypot: hidden from real users; bots that auto-fill forms will set it
+        // and get silently rejected by the server.
+        <input
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            width: 1,
+            height: 1,
+            opacity: 0,
+          }}
+          defaultValue=""
+        />
+      ) : null}
       {registering ? (
         <AuthField icon={<UserRound size={17} />} label="表示名">
           <input

@@ -5,6 +5,8 @@ import { createUserToken } from "@/lib/auth-tokens";
 import { sendNewUserAdminNotification, sendVerificationEmail } from "@/lib/email";
 import { apiError } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
+import { getClientInfo, logAuthEvent } from "@/lib/request-log";
 import { canonicalAppUrl } from "@/lib/stripe";
 
 const registerSchema = z.object({
@@ -14,12 +16,54 @@ const registerSchema = z.object({
   // "app" when the registration comes from the mobile app, so the verification
   // link returns the user into the app instead of the web dashboard.
   source: z.enum(["app", "web"]).optional(),
+  // Honeypot: hidden from real users; only form-filling bots set it.
+  website: z.string().optional(),
 });
 
+// Reserved / test-only email domains that legitimate users never sign up with
+// (RFC 2606). Automated signups repeatedly used these, so reject them.
+function isBlockedEmailDomain(email: string): boolean {
+  const domain = email.split("@")[1] ?? "";
+  if (["example.com", "example.net", "example.org", "test.com"].includes(domain))
+    return true;
+  return /\.(test|example|invalid|localhost)$/.test(domain);
+}
+
 export async function POST(request: NextRequest) {
+  const client = getClientInfo(request);
   try {
+    const limit = rateLimit(`register:${client.ip}`, 5, 10 * 60_000);
+    if (!limit.allowed) {
+      logAuthEvent("register.rate_limited", client);
+      return NextResponse.json(
+        { error: "リクエストが多すぎます。しばらく時間をおいてからお試しください。" },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } },
+      );
+    }
+
     const input = registerSchema.parse(await request.json());
+
+    // Honeypot tripped: pretend it succeeded but create nothing.
+    if (input.website && input.website.trim().length > 0) {
+      logAuthEvent("register.honeypot", client, { email: input.email });
+      return NextResponse.json({
+        pending: true,
+        email: input.email.toLowerCase(),
+        message:
+          "確認メールを送信しました。メール内のリンクからメールアドレスの確認を完了してください。",
+      });
+    }
+
     const email = input.email.toLowerCase();
+
+    if (isBlockedEmailDomain(email)) {
+      logAuthEvent("register.blocked_domain", client, { email });
+      return NextResponse.json(
+        { error: "このメールアドレスは利用できません。" },
+        { status: 400 },
+      );
+    }
+
     const passwordHash = await hashPassword(input.password);
     const existingRows = await prisma.$queryRaw<
       Array<{ id: string; email: string; name: string | null; passwordHash: string | null }>
@@ -119,6 +163,8 @@ export async function POST(request: NextRequest) {
     } catch (notifyError) {
       console.error("Failed to send new-user admin notification", notifyError);
     }
+
+    logAuthEvent("register.created", client, { email });
 
     return NextResponse.json({
       pending: true,
