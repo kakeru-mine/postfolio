@@ -121,9 +121,9 @@ export function ItemCard({
           <h2 className="mt-3 line-clamp-2 text-base font-black leading-6 tracking-tight text-[var(--ink)] sm:text-lg sm:leading-7">
             {heading}
           </h2>
-          {item.userMemo || subtitle || description ? (
+          {subtitle || description ? (
             <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
-              {item.userMemo || subtitle || description}
+              {subtitle || description}
             </p>
           ) : null}
 
@@ -177,7 +177,7 @@ export function ItemCard({
           {heading}
         </h2>
         <p className="mt-1.5 line-clamp-2 min-h-9 text-xs leading-4 text-slate-500 sm:mt-2 sm:min-h-10 sm:text-sm sm:leading-5">
-          {item.purpose || item.userMemo || subtitle || description}
+          {subtitle || description}
         </p>
 
         {item.userTags.length ? (
