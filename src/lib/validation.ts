@@ -5,6 +5,11 @@ const optionalId = z.preprocess(
   z.string().cuid().nullable().optional(),
 );
 
+// A saved item can be in many collections. Writers send the full desired set as
+// `collectionIds`; `collectionId` is kept for the single-pick save form, which
+// we treat as a one-element set.
+const collectionIds = z.array(z.string().cuid()).max(100).optional();
+
 export const savedItemCreateSchema = z.object({
   url: z
     .string()
@@ -16,6 +21,7 @@ export const savedItemCreateSchema = z.object({
   memo: z.string().max(5000).optional().default(""),
   purpose: z.string().max(200).optional().default(""),
   collectionId: optionalId,
+  collectionIds,
   tags: z.array(z.string().max(50)).max(20).optional().default([]),
 });
 
@@ -24,6 +30,7 @@ export const savedItemUpdateSchema = z.object({
   memo: z.string().max(5000).nullable().optional(),
   purpose: z.string().max(200).nullable().optional(),
   collectionId: optionalId,
+  collectionIds,
   tags: z.array(z.string().max(50)).max(20).optional(),
 });
 

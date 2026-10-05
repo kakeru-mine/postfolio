@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { updateSavedItemPublishedAt } from "@/lib/saved-item-published-at";
 import { ensureSystemCa } from "@/lib/system-ca";
 import { requireApiUser } from "@/lib/auth";
+import { flattenItemCollections, itemCollectionsSelect } from "@/lib/collections";
 
 // Re-fetching metadata downloads and re-hosts CDN images, which can exceed the
 // platform's default function timeout.
@@ -43,11 +44,16 @@ export async function PATCH(request: NextRequest, context: Context) {
     const updatedItem = await prisma.savedItem.update({
       where: { id: item.id },
       data: dataToUpdate,
+      include: itemCollectionsSelect,
     });
     await updateSavedItemPublishedAt(item.id, publishedAt);
 
     return NextResponse.json({
-      item: { ...updatedItem, publishedAt: publishedAt ?? null },
+      item: {
+        ...updatedItem,
+        collections: flattenItemCollections(updatedItem.collections),
+        publishedAt: publishedAt ?? null,
+      },
     });
   } catch (error) {
     return apiError(error);

@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     const { itemId } = requestSchema.parse(await request.json());
     const item = await prisma.savedItem.findFirst({
       where: { id: itemId, userId: user.id },
+      include: { collections: { select: { collectionId: true } } },
     });
 
     if (!item) {
@@ -80,8 +81,8 @@ export async function POST(request: NextRequest) {
     });
     revalidatePath(`/items/${item.id}`);
     revalidatePath("/collections");
-    if (item.collectionId) {
-      revalidatePath(`/collections/${item.collectionId}`);
+    for (const { collectionId } of item.collections) {
+      revalidatePath(`/collections/${collectionId}`);
     }
 
     return NextResponse.json({

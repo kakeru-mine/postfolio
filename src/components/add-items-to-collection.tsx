@@ -4,6 +4,7 @@ import type { SourcePlatform } from "@prisma/client";
 import { Check, FolderPlus, ImageIcon, LoaderCircle, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { ItemCollection } from "@/lib/collections";
 import { platformLabel } from "@/lib/platform";
 
 type PickItem = {
@@ -13,12 +14,12 @@ type PickItem = {
   domain: string | null;
   thumbnailUrl: string | null;
   sourcePlatform: SourcePlatform;
-  collectionId: string | null;
+  collections: ItemCollection[];
 };
 
 // Lets the user add already-saved posts to a collection from the collection page.
-// A saved item belongs to a single collection, so adding is a bulk "move" into
-// this collection; items already in it are hidden from the picker.
+// Adding is a bulk "addToCollection" (the posts keep any other memberships);
+// posts already in this collection are hidden from the picker.
 export function AddItemsToCollection({
   collectionId,
   collectionName,
@@ -47,7 +48,10 @@ export function AddItemsToCollection({
       }
       setItems(
         (data.items as PickItem[]).filter(
-          (item) => item.collectionId !== collectionId,
+          (item) =>
+            !item.collections.some(
+              (collection) => collection.id === collectionId,
+            ),
         ),
       );
     } catch (caught) {
@@ -75,7 +79,7 @@ export function AddItemsToCollection({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "move",
+          action: "addToCollection",
           itemIds: [...selected],
           collectionId,
         }),

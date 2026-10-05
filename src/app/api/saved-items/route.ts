@@ -10,6 +10,7 @@ import {
   parseSupportedPlatform,
 } from "@/lib/platform";
 import { requireApiUser } from "@/lib/auth";
+import { flattenItemCollections, itemCollectionsSelect } from "@/lib/collections";
 import { normalizeUrl } from "@/lib/utils";
 import { savedItemCreateSchema } from "@/lib/validation";
 import { updateSavedItemPublishedAt } from "@/lib/saved-item-published-at";
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
       where: {
         userId: user.id,
         ...(platform ? { sourcePlatform: platform } : {}),
-        ...(collectionId ? { collectionId } : {}),
+        ...(collectionId ? { collections: { some: { collectionId } } } : {}),
         ...(tag ? { userTags: { has: tag } } : {}),
         ...(q
           ? {
@@ -47,11 +48,16 @@ export async function GET(request: NextRequest) {
             }
           : {}),
       },
-      include: { collection: true },
+      include: itemCollectionsSelect,
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     });
 
-    return NextResponse.json({ items });
+    return NextResponse.json({
+      items: items.map((item) => ({
+        ...item,
+        collections: flattenItemCollections(item.collections),
+      })),
+    });
   } catch (error) {
     return apiError(error);
   }
@@ -101,6 +107,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Accept either the single-pick `collectionId` (save form) or a full
+    // `collectionIds` set, de-duplicated. Memberships are only created for
+    // collections the user actually owns.
+    const requestedCollectionIds = [
+      ...new Set(
+        [...(input.collectionIds ?? []), input.collectionId].filter(
+          (value): value is string => Boolean(value),
+        ),
+      ),
+    ];
+    const ownedCollectionIds = requestedCollectionIds.length
+      ? (
+          await prisma.collection.findMany({
+            where: { id: { in: requestedCollectionIds }, userId: user.id },
+            select: { id: true },
+          })
+        ).map((collection) => collection.id)
+      : [];
+
     const { publishedAt, ...storedMetadata } = metadata;
     const item = await prisma.savedItem.create({
       data: {
@@ -110,15 +135,23 @@ export async function POST(request: NextRequest) {
         userMemo: input.memo || null,
         purpose: input.purpose || null,
         userTags: input.tags,
-        collectionId: input.collectionId || null,
+        collections: {
+          create: ownedCollectionIds.map((id) => ({ collectionId: id })),
+        },
         ...storedMetadata,
       },
-      include: { collection: true },
+      include: itemCollectionsSelect,
     });
     await updateSavedItemPublishedAt(item.id, publishedAt);
 
     return NextResponse.json(
-      { item: { ...item, publishedAt: publishedAt ?? null } },
+      {
+        item: {
+          ...item,
+          collections: flattenItemCollections(item.collections),
+          publishedAt: publishedAt ?? null,
+        },
+      },
       { status: 201 },
     );
   } catch (error) {

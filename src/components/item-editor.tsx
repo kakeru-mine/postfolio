@@ -2,7 +2,15 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, LoaderCircle, Save, Trash2 } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  LoaderCircle,
+  Plus,
+  Save,
+  Trash2,
+} from "lucide-react";
+import type { ItemCollection } from "@/lib/collections";
 
 type ItemEditorProps = {
   item: {
@@ -11,7 +19,7 @@ type ItemEditorProps = {
     url: string;
     userMemo: string | null;
     userTags: string[];
-    collectionId: string | null;
+    collections: Pick<ItemCollection, "id" | "name">[];
   };
   collections: { id: string; name: string }[];
   allowDelete?: boolean;
@@ -28,9 +36,59 @@ export function ItemEditor({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [collectionId, setCollectionId] = useState(item.collectionId ?? "");
+  // A post can be in many collections, so the picker is a multi-select.
+  const [options, setOptions] = useState<{ id: string; name: string }[]>(
+    collections,
+  );
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    new Set(item.collections.map((collection) => collection.id)),
+  );
+  const [creatingOpen, setCreatingOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [creating, setCreating] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  function toggle(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function createCollection() {
+    const name = newName.trim();
+    if (!name || creating) return;
+    setCreating(true);
+    setError("");
+    try {
+      const response = await fetch("/api/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setError(result.error ?? "コレクションを作成できませんでした。");
+        return;
+      }
+      const created = result.collection as { id: string; name: string };
+      setOptions((current) =>
+        current.some((option) => option.id === created.id)
+          ? current
+          : [...current, { id: created.id, name: created.name }],
+      );
+      setSelectedIds((current) => new Set(current).add(created.id));
+      setNewName("");
+      setCreatingOpen(false);
+    } catch {
+      setError("コレクションを作成できませんでした。");
+    } finally {
+      setCreating(false);
+    }
+  }
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,7 +103,7 @@ export function ItemEditor({
       body: JSON.stringify({
         title: formData.get("title"),
         memo: formData.get("memo"),
-        collectionId: collectionId || null,
+        collectionIds: [...selectedIds],
         tags: String(formData.get("tags") ?? "")
           .split(/[,\n、]/)
           .map((tag) => tag.trim())
@@ -60,7 +118,13 @@ export function ItemEditor({
       return;
     }
 
-    setCollectionId(result.item.collectionId ?? "");
+    setSelectedIds(
+      new Set(
+        (result.item.collections as ItemCollection[]).map(
+          (collection) => collection.id,
+        ),
+      ),
+    );
     setMessage("変更を保存しました。");
     router.refresh();
   }
@@ -119,22 +183,78 @@ export function ItemEditor({
           />
         </label>
         <div className="grid gap-5 sm:grid-cols-2">
-          <label className="block text-sm font-bold">
-            コレクション
-            <select
-              className="field mt-2"
-              name="collectionId"
-              value={collectionId}
-              onChange={(event) => setCollectionId(event.target.value)}
-            >
-              <option value="">未分類</option>
-              {collections.map((collection) => (
-                <option key={collection.id} value={collection.id}>
-                  {collection.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="block text-sm font-bold">
+            <div className="flex items-center justify-between gap-2">
+              <span>コレクション</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setCreatingOpen((open) => !open);
+                  setError("");
+                }}
+                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-[var(--primary)] transition hover:bg-[var(--accent-soft)]"
+              >
+                <Plus size={14} />
+                新規追加
+              </button>
+            </div>
+            {creatingOpen ? (
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  className="field"
+                  value={newName}
+                  onChange={(event) => setNewName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void createCollection();
+                    }
+                  }}
+                  placeholder="コレクション名"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => void createCollection()}
+                  disabled={creating || !newName.trim()}
+                  className="button-primary shrink-0 px-3 py-2 text-sm disabled:opacity-60"
+                >
+                  {creating ? (
+                    <LoaderCircle className="animate-spin" size={16} />
+                  ) : (
+                    "追加"
+                  )}
+                </button>
+              </div>
+            ) : null}
+            <div className="mt-2 flex flex-wrap gap-2">
+              {options.length ? (
+                options.map((collection) => {
+                  const active = selectedIds.has(collection.id);
+                  return (
+                    <button
+                      key={collection.id}
+                      type="button"
+                      onClick={() => toggle(collection.id)}
+                      aria-pressed={active}
+                      className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-bold transition ${
+                        active
+                          ? "border-sky-300 bg-sky-50 text-sky-700"
+                          : "border-slate-200 bg-white text-slate-500 hover:border-sky-200 hover:text-sky-700"
+                      }`}
+                    >
+                      {active ? <Check size={13} /> : null}
+                      {collection.name}
+                    </button>
+                  );
+                })
+              ) : (
+                <p className="text-xs font-medium text-slate-400">
+                  コレクションがありません。「新規追加」で作成できます。
+                </p>
+              )}
+            </div>
+          </div>
           <label className="block text-sm font-bold">
             タグ
             <input

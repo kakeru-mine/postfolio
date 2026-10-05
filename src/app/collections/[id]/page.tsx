@@ -3,6 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddItemsToCollection } from "@/components/add-items-to-collection";
 import { CollectionItemsBrowser } from "@/components/collection-items-browser";
+import {
+  flattenItemCollections,
+  itemCollectionsSelect,
+} from "@/lib/collections";
 import { prisma } from "@/lib/prisma";
 import { getSavedItemAiRatings } from "@/lib/saved-item-ai-rating";
 import { requirePageUser } from "@/lib/user";
@@ -19,8 +23,11 @@ export default async function CollectionDetailPage({
       where: { id, userId: user.id },
       include: {
         items: {
-          include: { collection: true },
-          orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+          include: { savedItem: { include: itemCollectionsSelect } },
+          orderBy: [
+            { savedItem: { sortOrder: "asc" } },
+            { savedItem: { createdAt: "desc" } },
+          ],
         },
       },
     }),
@@ -32,12 +39,14 @@ export default async function CollectionDetailPage({
   ]);
 
   if (!collection) notFound();
+  const savedItems = collection.items.map((membership) => membership.savedItem);
   const ratings = await getSavedItemAiRatings(
-    collection.items.map((item) => item.id),
+    savedItems.map((item) => item.id),
     user.id,
   );
-  const items = collection.items.map((item) => ({
+  const items = savedItems.map((item) => ({
     ...item,
+    collections: flattenItemCollections(item.collections),
     aiRating: ratings.get(item.id) ?? null,
   }));
 
@@ -75,6 +84,7 @@ export default async function CollectionDetailPage({
         <CollectionItemsBrowser
           items={items}
           collections={collectionOptions}
+          currentCollectionId={collection.id}
         />
       </div>
     </div>

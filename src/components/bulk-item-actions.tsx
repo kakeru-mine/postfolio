@@ -17,18 +17,21 @@ type SelectedItem = {
   userTags: string[];
 };
 
-type Dialog = "delete" | "move" | "tag" | "analyze" | "remove" | null;
+type Dialog = "delete" | "add" | "tag" | "analyze" | "remove" | null;
 
 export function BulkItemActions({
   selectedItems,
   collections,
   onComplete,
   allowRemoveFromCollection = false,
+  currentCollectionId,
 }: {
   selectedItems: SelectedItem[];
   collections: { id: string; name: string }[];
   onComplete: () => void;
   allowRemoveFromCollection?: boolean;
+  // The collection "remove from" targets; required when allowRemoveFromCollection.
+  currentCollectionId?: string;
 }) {
   const router = useRouter();
   const [dialog, setDialog] = useState<Dialog>(null);
@@ -55,14 +58,31 @@ export function BulkItemActions({
               .map((tag) => tag.trim().replace(/^#/, ""))
               .filter(Boolean)
           : [];
+      if (dialog === "add" && !collectionId) {
+        setError("追加先のコレクションを選択してください。");
+        return;
+      }
+      if (dialog === "remove" && !currentCollectionId) {
+        setError("コレクションから外せませんでした。");
+        return;
+      }
+      if (dialog === "tag" && parsedTags.length === 0) {
+        setError("追加するタグを入力してください。");
+        return;
+      }
+
       const body =
         dialog === "remove"
-          ? { action: "move", itemIds, collectionId: null }
-          : dialog === "move"
+          ? {
+              action: "removeFromCollection",
+              itemIds,
+              collectionId: currentCollectionId,
+            }
+          : dialog === "add"
             ? {
-                action: "move",
+                action: "addToCollection",
                 itemIds,
-                collectionId: collectionId || null,
+                collectionId,
               }
             : dialog === "tag"
               ? {
@@ -71,11 +91,6 @@ export function BulkItemActions({
                   tags: parsedTags,
                 }
               : { action: "delete", itemIds };
-
-      if (dialog === "tag" && parsedTags.length === 0) {
-        setError("追加するタグを入力してください。");
-        return;
-      }
 
       const response = await fetch("/api/saved-items/bulk", {
         method: "POST",
@@ -145,8 +160,8 @@ export function BulkItemActions({
         <ActionButton icon={<Trash2 size={16} />} onClick={() => setDialog("delete")}>
           まとめて削除
         </ActionButton>
-        <ActionButton icon={<FolderInput size={16} />} onClick={() => setDialog("move")}>
-          まとめて移動
+        <ActionButton icon={<FolderInput size={16} />} onClick={() => setDialog("add")}>
+          コレクションに追加
         </ActionButton>
         <ActionButton icon={<Tags size={16} />} onClick={() => setDialog("tag")}>
           <span className="sm:hidden">
@@ -191,8 +206,8 @@ export function BulkItemActions({
             <h3 className="text-center text-lg font-bold">
               {dialog === "delete"
                 ? `${selectedItems.length}件の投稿を削除しますか？`
-                : dialog === "move"
-                  ? "移動先を選択"
+                : dialog === "add"
+                  ? "追加先を選択"
                   : dialog === "tag"
                     ? "タグをまとめて追加"
                     : dialog === "remove"
@@ -202,12 +217,12 @@ export function BulkItemActions({
             <p className="mt-2 text-center text-sm leading-6 text-slate-500">
               {dialog === "delete"
                 ? "削除した投稿は元に戻せません。"
-                : dialog === "move"
-                  ? "選択した投稿のコレクションを一括変更します。"
+                : dialog === "add"
+                  ? "選択した投稿を、選んだコレクションに追加します。"
                   : dialog === "tag"
                     ? "既存のタグは残したまま、新しいタグを追加します。"
                     : dialog === "remove"
-                      ? "投稿は削除されず、未分類に戻ります。"
+                      ? "投稿は削除されず、このコレクションから外れます。"
                       : (
                         <>
                           <span className="block">
@@ -220,14 +235,14 @@ export function BulkItemActions({
                       )}
             </p>
 
-            {dialog === "move" ? (
+            {dialog === "add" ? (
               <select
                 className="input mt-5"
                 value={collectionId}
                 onChange={(event) => setCollectionId(event.target.value)}
                 disabled={processing}
               >
-                <option value="">未分類</option>
+                <option value="">コレクションを選択</option>
                 {collections.map((collection) => (
                   <option key={collection.id} value={collection.id}>
                     {collection.name}

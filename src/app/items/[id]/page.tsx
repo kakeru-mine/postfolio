@@ -6,6 +6,10 @@ import { AiAnalysisPanel } from "@/components/ai-analysis-panel";
 import { ItemEditor } from "@/components/item-editor";
 import { MetadataRefreshButton } from "@/components/metadata-refresh-button";
 import { ThumbnailImage } from "@/components/thumbnail-image";
+import {
+  flattenItemCollections,
+  itemCollectionsSelect,
+} from "@/lib/collections";
 import { itemHeading, itemSubtitle } from "@/lib/item-display";
 import { platformLabel } from "@/lib/platform";
 import { prisma } from "@/lib/prisma";
@@ -23,7 +27,7 @@ export default async function ItemDetail({
   const [item, collections, publishedAt, aiRating] = await Promise.all([
     prisma.savedItem.findFirst({
       where: { id, userId: user.id },
-      include: { collection: true },
+      include: itemCollectionsSelect,
     }),
     prisma.collection.findMany({
       where: { userId: user.id },
@@ -35,6 +39,10 @@ export default async function ItemDetail({
   ]);
 
   if (!item) notFound();
+  const itemForEditor = {
+    ...item,
+    collections: flattenItemCollections(item.collections),
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
@@ -130,7 +138,7 @@ export default async function ItemDetail({
           </div>
 
           <div className="lg:hidden">
-            <ItemEditor item={item} collections={collections} />
+            <ItemEditor item={itemForEditor} collections={collections} />
           </div>
 
           <AiAnalysisPanel
@@ -146,7 +154,7 @@ export default async function ItemDetail({
         </section>
 
         <aside className="hidden lg:block">
-          <ItemEditor item={item} collections={collections} />
+          <ItemEditor item={itemForEditor} collections={collections} />
         </aside>
       </div>
     </div>

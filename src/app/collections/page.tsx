@@ -1,5 +1,9 @@
 import { CollectionManager } from "@/components/collection-manager";
 import { PageHeader } from "@/components/page-header";
+import {
+  flattenItemCollections,
+  itemCollectionsSelect,
+} from "@/lib/collections";
 import { prisma } from "@/lib/prisma";
 import { getSavedItemAiRatings } from "@/lib/saved-item-ai-rating";
 import { requirePageUser } from "@/lib/user";
@@ -13,8 +17,8 @@ export default async function CollectionsPage() {
       orderBy: { updatedAt: "desc" },
     }),
     prisma.savedItem.findMany({
-      where: { userId: user.id, collectionId: { not: null } },
-      include: { collection: true },
+      where: { userId: user.id, collections: { some: {} } },
+      include: itemCollectionsSelect,
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     }),
   ]);
@@ -24,6 +28,7 @@ export default async function CollectionsPage() {
   );
   const itemsWithRatings = items.map((item) => ({
     ...item,
+    collections: flattenItemCollections(item.collections),
     aiRating: ratings.get(item.id) ?? null,
   }));
 

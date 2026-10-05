@@ -126,8 +126,10 @@ model SavedItem {
   usefulFor       String[]       @default([])
   reuseStatus     String         @default("idea")
   evaluationNote  String?
-  collectionId    String?
-  collection      Collection?    @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  // A saved item can belong to many collections (many-to-many via
+  // CollectionMembership). Ordering within a collection reuses the global
+  // per-user sortOrder below, so drag-reordering behaves as before.
+  collections     CollectionMembership[]
   sortOrder       Int            @default(0)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -138,7 +140,6 @@ model SavedItem {
   @@index([userId, sourcePlatform])
   @@index([userId, reuseScore])
   @@index([userId, reuseStatus])
-  @@index([collectionId])
 }
 
 model Collection {
@@ -148,12 +149,28 @@ model Collection {
   name        String
   description String?
   color       String      @default("#6C63FF")
-  items       SavedItem[]
+  items       CollectionMembership[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   @@unique([userId, name])
   @@index([userId, updatedAt])
+}
+
+// Join table linking a SavedItem to a Collection. The presence of a row means
+// the item is in that collection; deleting the item or the collection removes
+// its memberships (cascade).
+model CollectionMembership {
+  id           String     @id @default(cuid())
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  savedItemId  String
+  savedItem    SavedItem  @relation(fields: [savedItemId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([collectionId, savedItemId])
+  @@index([savedItemId])
+  @@index([collectionId])
 }
 
 model AiUsageMonth {

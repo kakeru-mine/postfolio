@@ -1,6 +1,6 @@
 "use client";
 
-import type { Collection, SavedItem } from "@prisma/client";
+import type { SavedItem } from "@prisma/client";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { CollectionItemsBrowser } from "@/components/collection-items-browser";
 import { ManualHelpButton } from "@/components/manual-help-button";
+import type { ItemCollection } from "@/lib/collections";
 import type { AiRating } from "@/lib/saved-item-ai-rating";
 
 type CollectionItem = {
@@ -25,7 +26,7 @@ type CollectionItem = {
 };
 
 type SavedItemWithCollection = SavedItem & {
-  collection: Collection | null;
+  collections: ItemCollection[];
   aiRating: AiRating | null;
 };
 
@@ -51,7 +52,11 @@ export function CollectionManager({
     (collection) => collection.id === selectedCollectionId,
   );
   const selectedItems = selectedCollectionId
-    ? items.filter((item) => item.collectionId === selectedCollectionId)
+    ? items.filter((item) =>
+        item.collections.some(
+          (collection) => collection.id === selectedCollectionId,
+        ),
+      )
     : [];
 
   function showCreate() {
@@ -134,8 +139,8 @@ export function CollectionManager({
 
       <div className="mt-8 grid grid-cols-2 gap-3 lg:hidden">
         {collections.map((collection) => {
-          const collectionItems = items.filter(
-            (item) => item.collectionId === collection.id,
+          const collectionItems = items.filter((item) =>
+            item.collections.some((entry) => entry.id === collection.id),
           );
           return (
             <article key={collection.id} className="card overflow-hidden">
@@ -260,6 +265,7 @@ export function CollectionManager({
               <CollectionItemsBrowser
                 items={selectedItems}
                 collections={collections.map(({ id, name }) => ({ id, name }))}
+                currentCollectionId={selectedCollectionId ?? undefined}
               />
             </>
           ) : (

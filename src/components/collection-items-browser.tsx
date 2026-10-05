@@ -1,6 +1,6 @@
 "use client";
 
-import type { Collection, SavedItem } from "@prisma/client";
+import type { SavedItem } from "@prisma/client";
 import { format } from "date-fns";
 import {
   Calendar,
@@ -21,21 +21,26 @@ import { AiAnalysisPanel } from "@/components/ai-analysis-panel";
 import { BulkItemActions } from "@/components/bulk-item-actions";
 import { ItemEditor } from "@/components/item-editor";
 import { MetadataRefreshButton } from "@/components/metadata-refresh-button";
+import type { ItemCollection } from "@/lib/collections";
 import { itemHeading, itemSubtitle } from "@/lib/item-display";
 import { platformLabel } from "@/lib/platform";
 import type { AiRating } from "@/lib/saved-item-ai-rating";
 
 export type CollectionSavedItem = SavedItem & {
-  collection: Collection | null;
+  collections: ItemCollection[];
   aiRating: AiRating | null;
 };
 
 export function CollectionItemsBrowser({
   items,
   collections,
+  currentCollectionId,
 }: {
   items: CollectionSavedItem[];
   collections: { id: string; name: string }[];
+  // When rendered for a specific collection, "remove" takes a post out of that
+  // collection only (many-to-many); without it, remove is hidden.
+  currentCollectionId?: string;
 }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -50,10 +55,10 @@ export function CollectionItemsBrowser({
   const selectedItem = items.find((item) => item.id === selectedId);
   const removeItem = items.find((item) => item.id === removeId);
 
-  // Remove a single post from this collection (moves it to Uncategorized; the
-  // post itself is kept).
+  // Remove a single post from this collection (the post itself is kept and
+  // stays in any other collections it belongs to).
   async function removeFromCollection() {
-    if (!removeId) return;
+    if (!removeId || !currentCollectionId) return;
     setRemoving(true);
     setRemoveError("");
     try {
@@ -61,9 +66,9 @@ export function CollectionItemsBrowser({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "move",
+          action: "removeFromCollection",
           itemIds: [removeId],
-          collectionId: null,
+          collectionId: currentCollectionId,
         }),
       });
       if (!response.ok) {
@@ -172,14 +177,16 @@ export function CollectionItemsBrowser({
               >
                 <Check size={16} />
               </button>
-              <button
-                type="button"
-                onClick={() => setRemoveId(item.id)}
-                className="absolute top-2 right-2 z-10 grid size-7 place-items-center rounded-lg border border-white/80 bg-white/90 text-rose-500 shadow-sm backdrop-blur transition hover:bg-rose-500 hover:text-white sm:size-8"
-                aria-label="コレクションから外す"
-              >
-                <X size={16} />
-              </button>
+              {currentCollectionId ? (
+                <button
+                  type="button"
+                  onClick={() => setRemoveId(item.id)}
+                  className="absolute top-2 right-2 z-10 grid size-7 place-items-center rounded-lg border border-white/80 bg-white/90 text-rose-500 shadow-sm backdrop-blur transition hover:bg-rose-500 hover:text-white sm:size-8"
+                  aria-label="コレクションから外す"
+                >
+                  <X size={16} />
+                </button>
+              ) : null}
             </div>
           );
         })}
@@ -188,7 +195,8 @@ export function CollectionItemsBrowser({
       <BulkItemActions
         selectedItems={items.filter((item) => selectedIds.has(item.id))}
         collections={collections}
-        allowRemoveFromCollection
+        currentCollectionId={currentCollectionId}
+        allowRemoveFromCollection={Boolean(currentCollectionId)}
         onComplete={() => {
           setSelectedIds(new Set());
           setSelectedId(null);
@@ -403,7 +411,7 @@ export function CollectionItemsBrowser({
               コレクションから外しますか？
             </h3>
             <p className="mt-2 text-center text-sm leading-6 text-slate-500">
-              投稿は削除されず、未分類に戻ります。
+              投稿は削除されず、このコレクションから外れます。
             </p>
             {removeError ? (
               <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">

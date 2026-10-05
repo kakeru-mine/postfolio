@@ -16,6 +16,10 @@ import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { OnboardingWelcome } from "@/components/onboarding-welcome";
 import { PageHeader } from "@/components/page-header";
 import { UsageMeter } from "@/components/usage-meter";
+import {
+  flattenItemCollections,
+  itemCollectionsSelect,
+} from "@/lib/collections";
 import { prisma } from "@/lib/prisma";
 import { getUsageSummary } from "@/lib/usage";
 import { getOptionalCurrentUser } from "@/lib/user";
@@ -31,12 +35,16 @@ export default async function Home() {
     getUsageSummary(user),
     prisma.savedItem.findMany({
       where: { userId: user.id },
-      include: { collection: true },
+      include: itemCollectionsSelect,
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
       take: 3,
     }),
     prisma.collection.count({ where: { userId: user.id } }),
   ]);
+  const recentCards = recentItems.map((item) => ({
+    ...item,
+    collections: flattenItemCollections(item.collections),
+  }));
   const hasPaidPlan = user.plan !== "FREE";
   const aiUsageLabel =
     usage.plan.aiLimitPeriod === "day" ? "今日のAI分析" : "今月のAI分析";
@@ -103,7 +111,7 @@ export default async function Home() {
 
         {recentItems.length ? (
           <div className="mt-5 grid grid-cols-2 gap-3">
-            {recentItems.slice(0, 2).map((item) => (
+            {recentCards.slice(0, 2).map((item) => (
               <ItemCard key={item.id} item={item} />
             ))}
           </div>
@@ -212,7 +220,7 @@ export default async function Home() {
 
         {recentItems.length ? (
           <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
-            {recentItems.map((item, index) => (
+            {recentCards.map((item, index) => (
               <div key={item.id} className={index > 1 ? "hidden sm:block" : ""}>
                 <ItemCard item={item} />
               </div>

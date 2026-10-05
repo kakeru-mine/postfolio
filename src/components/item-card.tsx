@@ -1,8 +1,9 @@
-import { Collection, SavedItem } from "@prisma/client";
+import { SavedItem } from "@prisma/client";
 import { ArrowUpRight, Folder } from "lucide-react";
 import Link from "next/link";
 import { ThumbnailImage } from "@/components/thumbnail-image";
 import { LocalizedDate } from "@/components/localized-date";
+import type { ItemCollection } from "@/lib/collections";
 import { platformLabel } from "@/lib/platform";
 import {
   isGenericPinterestCaption,
@@ -25,8 +26,36 @@ export type ItemCardItem = Pick<
   | "userTags"
   | "createdAt"
 > & {
-  collection: Pick<Collection, "id" | "name"> | null;
+  collections: ItemCollection[];
 };
+
+// Shows the collections a post belongs to as small chips (light-blue fill with a
+// square border); falls back to "未分類" when the post is in none. At most two
+// chips are shown, with a +N overflow badge, so the card footer stays tidy.
+function CollectionChips({ collections }: { collections: ItemCollection[] }) {
+  if (!collections.length) {
+    return <span className="truncate">未分類</span>;
+  }
+  const shown = collections.slice(0, 2);
+  const extra = collections.length - shown.length;
+  return (
+    <span className="flex min-w-0 flex-wrap items-center gap-1">
+      {shown.map((collection) => (
+        <span
+          key={collection.id}
+          className="max-w-[7rem] truncate rounded-md border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold text-sky-700"
+        >
+          {collection.name}
+        </span>
+      ))}
+      {extra > 0 ? (
+        <span className="rounded-md border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">
+          +{extra}
+        </span>
+      ) : null}
+    </span>
+  );
+}
 
 export function ItemCard({
   item,
@@ -99,9 +128,9 @@ export function ItemCard({
           ) : null}
 
           <div className="mt-auto flex items-center justify-between gap-3 border-t border-stone-100 pt-4 text-xs text-stone-400">
-            <span className="flex min-w-0 items-center gap-1.5 truncate font-bold">
-              <Folder size={14} />
-              {item.collection?.name ?? "未分類"}
+            <span className="flex min-w-0 items-center gap-1.5 font-bold">
+              <Folder size={14} className="shrink-0" />
+              <CollectionChips collections={item.collections} />
             </span>
             <time className="shrink-0">
               <LocalizedDate date={item.createdAt} />
@@ -165,9 +194,9 @@ export function ItemCard({
         ) : null}
 
         <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-400 sm:mt-5 sm:pt-4 sm:text-xs">
-          <span className="flex min-w-0 items-center gap-1.5 truncate">
-            <Folder size={14} />
-            {item.collection?.name ?? "未分類"}
+          <span className="flex min-w-0 items-center gap-1.5">
+            <Folder size={14} className="shrink-0" />
+            <CollectionChips collections={item.collections} />
           </span>
           <time>
             <LocalizedDate date={item.createdAt} />

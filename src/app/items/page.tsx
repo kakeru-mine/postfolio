@@ -3,6 +3,10 @@ import { ItemFilters } from "@/components/item-filters";
 import { ManualHelpButton } from "@/components/manual-help-button";
 import { SaveItemForm } from "@/components/save-item-form";
 import { SortableItemGrid } from "@/components/sortable-item-grid";
+import {
+  flattenItemCollections,
+  itemCollectionsSelect,
+} from "@/lib/collections";
 import { prisma } from "@/lib/prisma";
 import { parseSupportedPlatform } from "@/lib/platform";
 import { requirePageUser } from "@/lib/user";
@@ -40,7 +44,7 @@ export default async function Home({
       where: {
         userId: user.id,
         ...(platform ? { sourcePlatform: platform } : {}),
-        ...(collectionId ? { collectionId } : {}),
+        ...(collectionId ? { collections: { some: { collectionId } } } : {}),
         ...(tag ? { userTags: { has: tag } } : {}),
         ...(q
           ? {
@@ -68,12 +72,7 @@ export default async function Home({
         purpose: true,
         userTags: true,
         createdAt: true,
-        collection: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        ...itemCollectionsSelect,
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     }),
@@ -81,6 +80,10 @@ export default async function Home({
   const tags = [...new Set(tagSources.flatMap((item) => item.userTags))].sort(
     (a, b) => a.localeCompare(b, "ja"),
   );
+  const itemCards = items.map((item) => ({
+    ...item,
+    collections: flattenItemCollections(item.collections),
+  }));
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
@@ -126,7 +129,7 @@ export default async function Home({
               {items.length}件
             </p>
           </div>
-          <SortableItemGrid items={items} collections={collections} />
+          <SortableItemGrid items={itemCards} collections={collections} />
         </>
       ) : (
         <div className="card mt-7 grid min-h-80 place-items-center p-8 text-center">
