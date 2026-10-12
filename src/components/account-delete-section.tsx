@@ -62,8 +62,12 @@ export function AccountDeleteSection() {
           }}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-600 transition hover:bg-rose-100 sm:mt-9 sm:w-40 sm:shrink-0 sm:text-xs lg:w-44"
         >
-          <Trash2 size={16} />
-          アカウントを削除
+          <Trash2 size={16} className="shrink-0" />
+          <span className="text-center leading-tight">
+            アカウントの
+            <br className="hidden sm:inline" />
+            削除
+          </span>
         </button>
       </div>
 
