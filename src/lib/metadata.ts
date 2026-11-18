@@ -394,6 +394,65 @@ async function fetchTikTokMetadata(
   }
 }
 
+// TikTok's oEmbed stopped returning title/author_name/thumbnail_url (it now only
+// hands back an embed iframe), so we also scrape the share page's Open Graph
+// tags. TikTok serves those tags to crawler user agents even though the default
+// fetch only gets the generic "TikTok - Make Your Day" wall.
+async function fetchTikTokPreviewMetadata(
+  url: URL,
+): Promise<PlatformMetadata> {
+  for (const userAgent of ["facebookexternalhit/1.1", "Twitterbot/1.0"]) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": userAgent,
+          Accept: "text/html,application/xhtml+xml",
+        },
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!response.ok) continue;
+
+      const type = response.headers.get("content-type") ?? "";
+      if (!type.includes("text/html")) continue;
+
+      const html = (await response.text()).slice(0, 2_000_000);
+      const metadata = extractTikTokOgMetadata(cheerio.load(html));
+      if (hasMetadata(metadata)) return metadata;
+    } catch {
+      // Try the next preview user agent.
+    }
+  }
+  return {};
+}
+
+function extractTikTokOgMetadata(
+  $: cheerio.CheerioAPI,
+): PlatformMetadata {
+  const ogTitle = cleanMetadataValue(
+    content($, ['meta[property="og:title"]', 'meta[name="twitter:title"]']),
+  );
+  // Share pages use "TikTok · <display name>"; the generic wall uses
+  // "TikTok - Make Your Day", which carries no post information.
+  const stripped = ogTitle
+    ?.replace(/^TikTok\s*[·\-|]\s*/i, "")
+    .replace(/\s*[|·]\s*TikTok$/i, "")
+    .trim();
+  const authorName =
+    stripped && !/^make your day$/i.test(stripped) ? stripped : undefined;
+  const thumbnailUrl = content($, [
+    'meta[property="og:image"]',
+    'meta[name="twitter:image"]',
+  ]);
+
+  return {
+    title: authorName ? ogTitle : undefined,
+    authorName,
+    thumbnailUrl,
+    mediaUrls: thumbnailUrl ? [thumbnailUrl] : [],
+  };
+}
+
 function extractTikTokPublishedAt(url: URL, html: string) {
   const videoId = url.pathname.match(/\/video\/(\d+)/)?.[1];
   if (!videoId) return undefined;
@@ -1149,7 +1208,10 @@ export async function fetchUrlMetadata(rawUrl: string) {
         : null;
     const platformMetadata =
       sourcePlatform === "TIKTOK"
-        ? await fetchTikTokMetadata(finalUrl, html)
+        ? mergePlatformMetadata(
+            await fetchTikTokMetadata(finalUrl, html),
+            await fetchTikTokPreviewMetadata(finalUrl),
+          )
         : sourcePlatform === "INSTAGRAM"
           ? {
               ...extractInstagramMetadata($),
