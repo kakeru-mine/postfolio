@@ -15,6 +15,11 @@ export class PostUnavailableError extends Error {
 
 const X_UNAVAILABLE_PATTERNS: Array<{ test: RegExp; message: string }> = [
   {
+    // X returns a 404 page with this copy for deleted or missing posts.
+    test: /could not be found or may have been deleted|Post Not Found/i,
+    message: "この投稿は削除されたか、存在しないため取得できませんでした。",
+  },
+  {
     test: /from a suspended account/i,
     message: "このアカウントは凍結されているため、投稿を取得できませんでした。",
   },

@@ -1191,6 +1191,27 @@ export async function fetchUrlMetadata(rawUrl: string) {
 
     const type = response.headers.get("content-type") ?? "";
     if (!response.ok || !type.includes("text/html")) {
+      // X serves a 404 page (still carrying Open Graph tags) for deleted or
+      // missing posts; surface that as an unavailable-post reason instead of a
+      // generic failure.
+      if (detectPlatform(url.hostname) === "X" && type.includes("text/html")) {
+        const $error = cheerio.load((await response.text()).slice(0, 500_000));
+        const reason = detectXUnavailableReason(
+          cleanMetadataValue(
+            content($error, [
+              'meta[property="og:description"]',
+              'meta[name="twitter:description"]',
+            ]),
+          ),
+          cleanMetadataValue(
+            content($error, [
+              'meta[property="og:title"]',
+              'meta[name="twitter:title"]',
+            ]),
+          ),
+        );
+        if (reason) throw new PostUnavailableError(reason);
+      }
       const fallbackMetadata = await fetchPlatformFallbackMetadata(url);
       if (fallbackMetadata) return fallbackMetadata;
       throw new Error("ページ情報を取得できませんでした。");
