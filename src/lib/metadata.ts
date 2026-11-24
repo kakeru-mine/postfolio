@@ -6,6 +6,10 @@ import { assertNotLiveBroadcast } from "@/lib/live-broadcast";
 import { detectPlatform } from "@/lib/platform";
 import { ensureSystemCa } from "@/lib/system-ca";
 import { fetchXContent } from "@/lib/x-content";
+import {
+  PostUnavailableError,
+  detectXUnavailableReason,
+} from "@/lib/post-unavailable";
 
 ensureSystemCa();
 
@@ -1202,6 +1206,27 @@ export async function fetchUrlMetadata(rawUrl: string) {
     await assertNotLiveBroadcast(finalUrl, sourcePlatform, html);
     const enrichedContent =
       sourcePlatform === "X" ? await fetchXContent(finalUrl.toString()) : null;
+    // X serves placeholder metadata for suspended / removed / deleted / private
+    // posts. Without real content from the API, stop before returning so the
+    // saved item is not overwritten with an empty shell, and surface the reason.
+    if (sourcePlatform === "X" && !enrichedContent?.postText) {
+      const unavailableReason = detectXUnavailableReason(
+        cleanMetadataValue(
+          content($, [
+            'meta[property="og:description"]',
+            'meta[name="twitter:description"]',
+            'meta[name="description"]',
+          ]),
+        ),
+        cleanMetadataValue(
+          content($, [
+            'meta[property="og:title"]',
+            'meta[name="twitter:title"]',
+          ]),
+        ),
+      );
+      if (unavailableReason) throw new PostUnavailableError(unavailableReason);
+    }
     const youTubeMetadata =
       sourcePlatform === "YOUTUBE"
         ? await fetchYouTubeMetadata(finalUrl, html)
